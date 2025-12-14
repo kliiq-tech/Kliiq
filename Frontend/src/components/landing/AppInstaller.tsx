@@ -80,7 +80,9 @@ export function AppInstaller() {
         setIsGenerating(true)
 
         // Generate Batch script that wraps PowerShell
-        // This allows double-click execution (bypassing .ps1 restriction) and hidden window
+        // 1. Checks for Admin privileges (auto-elevates if needed)
+        // 2. Runs PowerShell visibly so user can see progress
+        // 3. Pauses at the end so user can see results
         const scriptContent = `@echo off
 :: Kliiq - Smart Application Installer
 :: Automatically requests admin privileges if needed
@@ -95,16 +97,27 @@ IF %ERRORLEVEL% EQU 0 (
 )
 
 :run
-:: Run the PowerShell installer logic in a hidden window
-:: We pass the install commands directly to a hidden PowerShell instance
+cls
+echo ===========================================
+echo        Kliiq Installer Starting...
+echo ===========================================
+echo.
 
-set "APPS=${selectedApps.map(id => `\\"${id}\\"`).join(',')}"
-
-echo Starting Kliiq background installer...
-echo This window will close automatically.
-echo Installing: %APPS%
-
-powershell -NoProfile -ExecutionPolicy Bypass -WindowStyle Hidden -Command "$apps = @(${selectedApps.map(id => `'${id}'`).join(',')}); foreach ($a in $apps) { winget install --id $a --silent --accept-source-agreements --accept-package-agreements --source winget --disable-interactivity; }"
+:: Run PowerShell visibly with progress
+:: -NoProfile: Faster startup
+:: -ExecutionPolicy Bypass: Allow script to run
+:: Common winget flags to ensure non-interactive SUCCESS but visible PROGRESS
+powershell -NoProfile -ExecutionPolicy Bypass -Command ^
+    "$apps = @(${selectedApps.map(id => `'${id}'`).join(',')}); ^
+    foreach ($app in $apps) { ^
+        Write-Host ('Installing ' + $app + '...') -ForegroundColor Cyan; ^
+        winget install --id $app -e --accept-source-agreements --accept-package-agreements; ^
+        Write-Host ''; ^
+    } ^
+    Write-Host '-------------------------------------------' -ForegroundColor Green; ^
+    Write-Host 'Installation Process Complete.' -ForegroundColor Green; ^
+    Write-Host 'You can safely close this window.' -ForegroundColor Gray; ^
+    Read-Host 'Press Enter to exit'"
 
 exit
 `
@@ -113,7 +126,7 @@ exit
         const url = window.URL.createObjectURL(blob)
         const a = document.createElement('a')
         a.href = url
-        a.download = 'KliiqInstaller.bat' // Changed extension to .bat
+        a.download = 'KliiqInstaller.bat'
         document.body.appendChild(a)
         a.click()
         document.body.removeChild(a)
