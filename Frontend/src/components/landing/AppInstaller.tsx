@@ -104,9 +104,8 @@ foreach ($app in $apps) {
 }
 
 Write-Host "-------------------------------------------" -ForegroundColor Green
-Write-Host "Installation Process Complete." -ForegroundColor Green
-Write-Host "You can safely close this window." -ForegroundColor Gray
-Read-Host "Press Enter to exit"
+Write-Host "Installation Complete! Window will close in 3 seconds..." -ForegroundColor Green
+Start-Sleep -Seconds 3
 `
 
         // 2. Encode to Base64 UTF-16LE (Required for PowerShell -EncodedCommand)
