@@ -79,30 +79,41 @@ export function AppInstaller() {
     const generateInstaller = () => {
         setIsGenerating(true)
 
-        // Generate PowerShell script content
-        const scriptContent = `# Kliiq Installer Script
-# Generated automatically by Kliiq
+        // Generate Batch script that wraps PowerShell
+        // This allows double-click execution (bypassing .ps1 restriction) and hidden window
+        const scriptContent = `@echo off
+:: Kliiq - Smart Application Installer
+:: Automatically requests admin privileges if needed
 
-Write-Host "Starting Kliiq Installation..." -ForegroundColor Cyan
-
-$apps = @(
-    ${selectedApps.map(id => `"${id}"`).join(',\n    ')}
+NET SESSION >nul 2>&1
+IF %ERRORLEVEL% EQU 0 (
+    GOTO :run
+) ELSE (
+    echo Requesting admin privileges to install software...
+    powershell -Command "Start-Process '%~f0' -Verb RunAs"
+    exit /b
 )
 
-foreach ($app in $apps) {
-    Write-Host "Installing $app..." -ForegroundColor Yellow
-    winget install -e --id $app --accept-source-agreements --accept-package-agreements
-}
+:run
+:: Run the PowerShell installer logic in a hidden window
+:: We pass the install commands directly to a hidden PowerShell instance
 
-Write-Host "Installation Complete! Enjoy your setup." -ForegroundColor Green
-Read-Host "Press Enter to exit"
+set "APPS=${selectedApps.map(id => `\\"${id}\\"`).join(',')}"
+
+echo Starting Kliiq background installer...
+echo This window will close automatically.
+echo Installing: %APPS%
+
+powershell -NoProfile -ExecutionPolicy Bypass -WindowStyle Hidden -Command "$apps = @(${selectedApps.map(id => `'${id}'`).join(',')}); foreach ($a in $apps) { winget install --id $a --silent --accept-source-agreements --accept-package-agreements --source winget --disable-interactivity; }"
+
+exit
 `
         // Create blob and download link
         const blob = new Blob([scriptContent], { type: 'text/plain' })
         const url = window.URL.createObjectURL(blob)
         const a = document.createElement('a')
         a.href = url
-        a.download = 'kliiq-install.ps1'
+        a.download = 'KliiqInstaller.bat' // Changed extension to .bat
         document.body.appendChild(a)
         a.click()
         document.body.removeChild(a)
