@@ -1,0 +1,23 @@
+import { Hero } from '../components/landing/Hero'
+import { Features } from '../components/landing/Features'
+import { Testimonials } from '../components/landing/Testimonials'
+import { WhyKliiq } from '../components/landing/WhyKliiq'
+import { HowItWorks } from '../components/landing/HowItWorks'
+import { TargetAudience } from '../components/landing/TargetAudience'
+import { AppInstaller } from '../components/landing/AppInstaller'
+import { Security } from '../components/landing/Security'
+
+export function LandingPage() {
+    return (
+        <div className="min-h-screen">
+            <Hero />
+            <WhyKliiq />
+            <Features />
+            <AppInstaller />
+            <HowItWorks />
+            <TargetAudience />
+            <Testimonials />
+            <Security />
+        </div>
+    )
+}
