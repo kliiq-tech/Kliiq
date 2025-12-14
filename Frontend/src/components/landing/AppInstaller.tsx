@@ -79,54 +79,52 @@ export function AppInstaller() {
     const generateInstaller = () => {
         setIsGenerating(true)
 
-        // Generate Batch script that wraps PowerShell
-        // 1. Checks for Admin privileges (auto-elevates if needed)
-        // 2. Runs PowerShell visibly so user can see progress
-        // 3. Pauses at the end so user can see results
-        const scriptContent = `@echo off
-:: Kliiq - Smart Application Installer
-:: Automatically requests admin privileges if needed
+        // Polyglot Script: Valid Batch AND Valid PowerShell
+        // The Batch part (top) self-elevates and runs the file as PowerShell.
+        // The PowerShell part (bottom) is ignored by Batch (<#...#>) and runs the logic.
+        const scriptContent = `<# :
+@echo off
+set "SCRIPT=%~f0"
+:: Re-launch self with PowerShell and Admin Privileges
+powershell -NoProfile -ExecutionPolicy Bypass -Command "Start-Process -Verb RunAs -FilePath powershell -ArgumentList '-NoProfile -ExecutionPolicy Bypass -File ""%SCRIPT%""'"
+exit /b
+#>
 
-NET SESSION >nul 2>&1
-IF %ERRORLEVEL% EQU 0 (
-    GOTO :run
-) ELSE (
-    echo Requesting admin privileges to install software...
-    powershell -Command "Start-Process '%~f0' -Verb RunAs"
-    exit /b
+# ==========================================
+# PowerShell Installation Logic
+# ==========================================
+
+$apps = @(
+${selectedApps.map(id => `    "${id}"`).join(',\n')}
 )
 
-:run
-cls
-echo ===========================================
-echo        Kliiq Installer Starting...
-echo ===========================================
-echo.
+Clear-Host
+Write-Host "===========================================" -ForegroundColor Cyan
+Write-Host "        Kliiq Installer Starting..." -ForegroundColor Cyan
+Write-Host "===========================================" -ForegroundColor Cyan
+Write-Host ""
 
-:: Run PowerShell visibly with progress
-:: -NoProfile: Faster startup
-:: -ExecutionPolicy Bypass: Allow script to run
-:: Common winget flags to ensure non-interactive SUCCESS but visible PROGRESS
-powershell -NoProfile -ExecutionPolicy Bypass -Command ^
-    "$apps = @(${selectedApps.map(id => `'${id}'`).join(',')}); ^
-    foreach ($app in $apps) { ^
-        Write-Host ('Installing ' + $app + '...') -ForegroundColor Cyan; ^
-        winget install --id $app -e --accept-source-agreements --accept-package-agreements; ^
-        Write-Host ''; ^
-    } ^
-    Write-Host '-------------------------------------------' -ForegroundColor Green; ^
-    Write-Host 'Installation Process Complete.' -ForegroundColor Green; ^
-    Write-Host 'You can safely close this window.' -ForegroundColor Gray; ^
-    Read-Host 'Press Enter to exit'"
+foreach ($app in $apps) {
+    Write-Host "Installing $app..." -ForegroundColor Yellow
+    try {
+        winget install --id $app -e --accept-source-agreements --accept-package-agreements --source winget
+    } catch {
+        Write-Host "Failed to install $app" -ForegroundColor Red
+    }
+    Write-Host ""
+}
 
-exit
+Write-Host "-------------------------------------------" -ForegroundColor Green
+Write-Host "Installation Process Complete." -ForegroundColor Green
+Write-Host "You can safely close this window." -ForegroundColor Gray
+Read-Host "Press Enter to exit"
 `
         // Create blob and download link
         const blob = new Blob([scriptContent], { type: 'text/plain' })
         const url = window.URL.createObjectURL(blob)
         const a = document.createElement('a')
         a.href = url
-        a.download = 'KliiqInstaller.bat'
+        a.download = 'KliiqInstaller.cmd' // .cmd is recognized as Batch
         document.body.appendChild(a)
         a.click()
         document.body.removeChild(a)
