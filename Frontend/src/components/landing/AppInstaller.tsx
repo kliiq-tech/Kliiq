@@ -79,30 +79,19 @@ export function AppInstaller() {
     const generateInstaller = () => {
         setIsGenerating(true)
 
-        // Polyglot Script: Valid Batch AND Valid PowerShell
-        // The Batch part (top) self-elevates and runs the file as PowerShell.
-        // The PowerShell part (bottom) is ignored by Batch (<#...#>) and runs the logic.
-        const scriptContent = `<# :
-@echo off
-set "SCRIPT=%~f0"
-:: Re-launch self with PowerShell and Admin Privileges
-powershell -NoProfile -ExecutionPolicy Bypass -Command "Start-Process -Verb RunAs -FilePath powershell -ArgumentList '-NoProfile -ExecutionPolicy Bypass -File ""%SCRIPT%""'"
-exit /b
-#>
-
-# ==========================================
-# PowerShell Installation Logic
-# ==========================================
-
+        // 1. Define the Clean PowerShell Logic (No escaping needed here)
+        const psScript = `
 $apps = @(
 ${selectedApps.map(id => `    "${id}"`).join(',\n')}
 )
 
 Clear-Host
+$host.UI.RawUI.WindowTitle = "Kliiq Installer"
 Write-Host "===========================================" -ForegroundColor Cyan
 Write-Host "        Kliiq Installer Starting..." -ForegroundColor Cyan
 Write-Host "===========================================" -ForegroundColor Cyan
 Write-Host ""
+Write-Host "Checking for permissions..." -ForegroundColor Gray
 
 foreach ($app in $apps) {
     Write-Host "Installing $app..." -ForegroundColor Yellow
@@ -119,12 +108,41 @@ Write-Host "Installation Process Complete." -ForegroundColor Green
 Write-Host "You can safely close this window." -ForegroundColor Gray
 Read-Host "Press Enter to exit"
 `
+
+        // 2. Encode to Base64 UTF-16LE (Required for PowerShell -EncodedCommand)
+        // This makes the script bulletproof against special characters and 'batch' parsing errors.
+        const toBase64 = (str: string) => {
+            const codeUnits = new Uint16Array(str.length);
+            for (let i = 0; i < codeUnits.length; i++) {
+                codeUnits[i] = str.charCodeAt(i);
+            }
+            const charCodes = new Uint8Array(codeUnits.buffer);
+            let result = "";
+            // Process in chunks to avoid stack overflow on large strings
+            for (let i = 0; i < charCodes.length; i += 8192) {
+                result += String.fromCharCode.apply(null, Array.from(charCodes.subarray(i, i + 8192)));
+            }
+            return btoa(result);
+        }
+
+        const encodedPs = toBase64(psScript)
+
+        // 3. Generate the Batch Wrapper
+        // This simple wrapper just asks PowerShell to run the encoded string as Admin.
+        const scriptContent = `@echo off
+set "params=%*"
+cd /d "%~dp0" && ( if exist "%temp%\\getadmin.vbs" del "%temp%\\getadmin.vbs" ) && fsutil dirty query %systemdrive% 1>nul 2>nul || (  echo Set UAC = CreateObject^("Shell.Application"^) : UAC.ShellExecute "cmd.exe", "/k cd ""%~sdp0"" && %~s0 %params%", "", "runas", 1 >> "%temp%\\getadmin.vbs" && "%temp%\\getadmin.vbs" && exit /B )
+
+:: Running Kliiq Installer...
+powershell -NoProfile -ExecutionPolicy Bypass -EncodedCommand ${encodedPs}
+exit
+`
         // Create blob and download link
         const blob = new Blob([scriptContent], { type: 'text/plain' })
         const url = window.URL.createObjectURL(blob)
         const a = document.createElement('a')
         a.href = url
-        a.download = 'KliiqInstaller.cmd' // .cmd is recognized as Batch
+        a.download = 'KliiqInstaller.cmd'
         document.body.appendChild(a)
         a.click()
         document.body.removeChild(a)
