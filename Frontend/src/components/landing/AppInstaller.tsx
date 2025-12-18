@@ -85,185 +85,146 @@ export function AppInstaller() {
             .filter(a => selectedApps.includes(a.id))
             .map(a => `@{id="${a.id}"; name="${a.name}"}`);
 
-        // Define the Native PowerShell GUI Script (WPF)
+        // Define the Native PowerShell GUI Script (Windows Forms)
+        // This is much more stable and handles threading more predictably in simple environments.
         const psScript = `
-Add-Type -AssemblyName PresentationFramework
 Add-Type -AssemblyName System.Windows.Forms
+Add-Type -AssemblyName System.Drawing
 
 $apps = @(
     ${selectedAppData.join(',\n    ')}
 )
 
-$xaml = @"
-<Window xmlns="http://schemas.microsoft.com/winfx/2000/xaml/presentation"
-        xmlns:x="http://schemas.microsoft.com/winfx/2000/xaml"
-        Title="Kliiq Installer" Height="450" Width="500" Background="#F0F0F0"
-        WindowStartupLocation="CenterScreen" ResizeMode="NoResize" Topmost="True">
-    <Grid>
-        <Grid.RowDefinitions>
-            <RowDefinition Height="Auto"/>
-            <RowDefinition Height="*"/>
-            <RowDefinition Height="Auto"/>
-        </Grid.RowDefinitions>
-        
-        <!-- Header -->
-        <Border Grid.Row="0" Background="LinearGradient 0,0 1,1">
-            <Border.Background>
-                <LinearGradientBrush StartPoint="0,0" EndPoint="1,0">
-                    <GradientStop Color="#0058d8" Offset="0.0" />
-                    <GradientStop Color="#0096ff" Offset="1.0" />
-                </LinearGradientBrush>
-            </Border.Background>
-            <StackPanel Orientation="Horizontal" Padding="10">
-                <Ellipse Width="16" Height="16" Fill="White" Margin="0,0,10,0"/>
-                <TextBlock Text="Kliiq Installer" Foreground="White" FontWeight="Bold" VerticalAlignment="Center"/>
-            </StackPanel>
-        </Border>
+# --- Theme Colors ---
+$bgColor = [System.Drawing.Color]::FromArgb(240, 240, 240)
+$headerColor = [System.Drawing.Color]::FromArgb(0, 88, 216)
+$borderColor = [System.Drawing.Color]::FromArgb(204, 204, 204)
+$textColor = [System.Drawing.Color]::FromArgb(51, 51, 51)
+$linkFill = [System.Drawing.Color]::FromArgb(0, 102, 204)
 
-        <!-- Main Content -->
-        <StackPanel Grid.Row="1" Padding="25" Background="White">
-            <TextBlock Name="CurrentStatus" Text="Initializing..." FontSize="15" Margin="0,0,0,15" Foreground="#333333"/>
-            
-            <Border BorderBrush="#CCCCCC" BorderThickness="1" Height="25" CornerRadius="2" ClipToBounds="True">
-                <ProgressBar Name="OverallProgress" Minimum="0" Maximum="100" Value="0" Height="25" BorderThickness="0">
-                    <ProgressBar.Foreground>
-                        <LinearGradientBrush StartPoint="0,0" EndPoint="0,1">
-                            <GradientStop Color="#28e028" Offset="0.0" />
-                            <GradientStop Color="#1cb81c" Offset="1.0" />
-                        </LinearGradientBrush>
-                    </ProgressBar.Foreground>
-                </ProgressBar>
-            </Border>
+# --- Form Setup ---
+$form = New-Object System.Windows.Forms.Form
+$form.Text = "Kliiq Installer"
+$form.Size = New-Object System.Drawing.Size(500, 480)
+$form.BackColor = $bgColor
+$form.FormBorderStyle = 'FixedDialog'
+$form.MaximizeBox = $false
+$form.StartPosition = 'CenterScreen'
+$form.TopMost = $true
 
-            <Grid Margin="0,15,0,0">
-                <Grid.ColumnDefinitions>
-                    <ColumnDefinition Width="*"/>
-                    <ColumnDefinition Width="Auto"/>
-                </Grid.ColumnDefinitions>
-                <Button Name="ToggleDetails" Content="Hide details ▲" Background="Transparent" BorderThickness="0" Foreground="#0066CC" HorizontalAlignment="Left" Cursor="Hand"/>
-                <StackPanel Grid.Column="1" Orientation="Horizontal">
-                    <Button Name="WriteFeedback" Content="Write feedback" Background="Transparent" BorderThickness="0" Foreground="#0066CC" Margin="0,0,20,0" Cursor="Hand"/>
-                    <Button Name="CancelBtn" Content="Cancel" Width="80" Padding="5" Background="#E1E1E1" BorderBrush="#AAAAAA" BorderThickness="1"/>
-                </StackPanel>
-            </Grid>
+# --- Header ---
+$header = New-Object System.Windows.Forms.Panel
+$header.Size = New-Object System.Drawing.Size(500, 40)
+$header.BackColor = $headerColor
+$header.Dock = 'Top'
 
-            <ScrollViewer Name="DetailPanel" Margin="0,15,0,0" Height="180" VerticalScrollBarVisibility="Auto" BorderBrush="#EEEEEE" BorderThickness="1">
-                <ItemsControl Name="AppItems">
-                    <ItemsControl.ItemTemplate>
-                        <DataTemplate>
-                            <Grid Margin="0,0,0,2">
-                                <Grid.ColumnDefinitions>
-                                    <ColumnDefinition Width="*"/>
-                                    <ColumnDefinition Width="150"/>
-                                </Grid.ColumnDefinitions>
-                                <Border BorderBrush="#F9F9F9" BorderThickness="0,0,1,1" Padding="8,4">
-                                    <TextBlock Text="{Binding name}" FontSize="12"/>
-                                </Border>
-                                <Border Grid.Column="1" BorderBrush="#F9F9F9" BorderThickness="0,0,0,1" Padding="8,4">
-                                    <TextBlock Text="{Binding status}" FontSize="12" Name="StatusText"/>
-                                </Border>
-                            </Grid>
-                        </DataTemplate>
-                    </ItemsControl.ItemTemplate>
-                </ItemsControl>
-            </ScrollViewer>
-        </StackPanel>
+$headerLabel = New-Object System.Windows.Forms.Label
+$headerLabel.Text = "Kliiq Installer"
+$headerLabel.ForeColor = [System.Drawing.Color]::White
+$headerLabel.Font = New-Object System.Drawing.Font("Arial", 10, [System.Drawing.FontStyle]::Bold)
+$headerLabel.AutoSize = $true
+$headerLabel.Location = New-Object System.Drawing.Point(10, 10)
+$header.Controls.Add($headerLabel)
 
-        <!-- Footer -->
-        <Border Grid.Row="2" Background="#F0F0F0" Padding="5" BorderBrush="#CCCCCC" BorderThickness="0,1,0,0">
-            <TextBlock Text="Kliiq Installer v1.0" HorizontalAlignment="Right" FontSize="9" Foreground="#999999" FontStyle="Italic"/>
-        </Border>
-    </Grid>
-</Window>
-"@
+# --- Padding Container ---
+$container = New-Object System.Windows.Forms.Panel
+$container.Dock = 'Fill'
+$container.Padding = New-Object System.Windows.Forms.Padding(25)
+$container.BackColor = [System.Drawing.Color]::White
 
-$reader = [XML.XmlReader]::Create([System.IO.StringReader] $xaml)
-$window = [Windows.Markup.XamlReader]::Load($reader)
+# --- Status Label ---
+$statusLabel = New-Object System.Windows.Forms.Label
+$statusLabel.Text = "Initializing..."
+$statusLabel.Size = New-Object System.Drawing.Size(430, 25)
+$statusLabel.Location = New-Object System.Drawing.Point(25, 20)
+$statusLabel.Font = New-Object System.Drawing.Font("Segoe UI", 11)
+$statusLabel.ForeColor = $textColor
 
-# Get UI Elements
-$currentStatus = $window.FindName("CurrentStatus")
-$progressBar = $window.FindName("OverallProgress")
-$appItems = $window.FindName("AppItems")
-$detailPanel = $window.FindName("DetailPanel")
-$toggleDetails = $window.FindName("ToggleDetails")
-$cancelBtn = $window.FindName("CancelBtn")
+# --- Progress Bar ---
+$progressBar = New-Object System.Windows.Forms.ProgressBar
+$progressBar.Size = New-Object System.Drawing.Size(430, 25)
+$progressBar.Location = New-Object System.Drawing.Point(25, 55)
+$progressBar.Style = 'Blocks'
+$progressBar.Minimum = 0
+$progressBar.Maximum = 100
 
-# Setup App Data
-$observableApps = New-Object System.Collections.ObjectModel.ObservableCollection[PSObject]
-foreach($app in $apps) {
-    $observableApps.Add([PSCustomObject]@{id=$app.id; name=$app.name; status="Waiting"})
+# --- App List (ListView) ---
+$listView = New-Object System.Windows.Forms.ListView
+$listView.Size = New-Object System.Drawing.Size(430, 220)
+$listView.Location = New-Object System.Drawing.Point(25, 100)
+$listView.View = 'Details'
+$listView.FullRowSelect = $true
+$listView.GridLines = $true
+$listView.Columns.Add("Application", 260) | Out-Null
+$listView.Columns.Add("Status", 150) | Out-Null
+$listView.HeaderStyle = 'Nonclickable'
+$listView.Font = New-Object System.Drawing.Font("Segoe UI", 9)
+
+foreach ($app in $apps) {
+    $item = New-Object System.Windows.Forms.ListViewItem($app.name)
+    $item.SubItems.Add("Waiting") | Out-Null
+    $item.Name = $app.id
+    $listView.Items.Add($item) | Out-Null
 }
-$appItems.ItemsSource = $observableApps
 
-# Toggle Details Logic
-$toggleDetails.Add_Click({
-    if ($detailPanel.Visibility -eq "Visible") {
-        $detailPanel.Visibility = "Collapsed"
-        $toggleDetails.Content = "Show details ▼"
-        $window.Height = 250
-    } else {
-        $detailPanel.Visibility = "Visible"
-        $toggleDetails.Content = "Hide details ▲"
-        $window.Height = 450
-    }
-})
+# --- Footer Buttons ---
+$footerPanel = New-Object System.Windows.Forms.Panel
+$footerPanel.Dock = 'Bottom'
+$footerPanel.Size = New-Object System.Drawing.Size(500, 60)
+$footerPanel.BackColor = $bgColor
 
-$cancelBtn.Add_Click({ $window.Close() })
+$cancelBtn = New-Object System.Windows.Forms.Button
+$cancelBtn.Text = "Cancel"
+$cancelBtn.Size = New-Object System.Drawing.Size(80, 30)
+$cancelBtn.Location = New-Object System.Drawing.Point(390, 15)
+$cancelBtn.FlatStyle = 'System'
+$cancelBtn.Add_Click({ $form.Close() })
 
-# Background Installation Thread
-$window.Add_Loaded({
-    $scriptBlock = {
-        param($appsToInstall, $control)
+$footerPanel.Controls.Add($cancelBtn)
+
+# --- Assemble ---
+$form.Controls.Add($container)
+$container.Controls.Add($statusLabel)
+$container.Controls.Add($progressBar)
+$container.Controls.Add($listView)
+$form.Controls.Add($header)
+$form.Controls.Add($footerPanel)
+
+# --- Installation Logic ---
+$form.Add_Shown({
+    $form.Focus()
+    $total = $apps.Count
+    $index = 0
+
+    foreach ($app in $apps) {
+        $statusLabel.Text = "Installing $($app.name)..."
+        $listView.Items[$app.id].SubItems[1].Text = "Downloading"
+        [System.Windows.Forms.Application]::DoEvents()
+        Start-Sleep -Milliseconds 500
+
+        $listView.Items[$app.id].SubItems[1].Text = "Installing"
+        [System.Windows.Forms.Application]::DoEvents()
         
-        $count = 0
-        foreach ($app in $appsToInstall) {
-            $control.Dispatcher.Invoke([Action]{ 
-                $currentStatus.Text = "Installing $($app.name)..."
-            })
-
-            # Simulate Download
-            $control.Dispatcher.Invoke([Action]{ 
-                $observableApps | Where-Object { $_.id -eq $app.id } | ForEach-Object { $_.status = "Downloading" }
-                $appItems.Items.Refresh()
-            })
-            Start-Sleep -Milliseconds 800
-
-            # Real Installation
-            $control.Dispatcher.Invoke([Action]{ 
-                $observableApps | Where-Object { $_.id -eq $app.id } | ForEach-Object { $_.status = "Installing" }
-                $appItems.Items.Refresh()
-            })
-
-            try {
-                winget install --id $app.id -e --accept-source-agreements --accept-package-agreements --source winget --silent
-                $status = "OK"
-            } catch {
-                $status = "Failed"
-            }
-
-            $control.Dispatcher.Invoke([Action]{ 
-                $observableApps | Where-Object { $_.id -eq $app.id } | ForEach-Object { $_.status = $status }
-                $appItems.Items.Refresh()
-                $count++
-                $progressBar.Value = ($count / $appsToInstall.Count) * 100
-            })
+        try {
+            # Use winget with force-accept to avoid interactive prompts
+            Start-Process "winget" -ArgumentList "install --id $($app.id) -e --accept-source-agreements --accept-package-agreements --source winget --silent" -Wait -NoNewWindow
+            $listView.Items[$app.id].SubItems[1].Text = "OK"
+        } catch {
+            $listView.Items[$app.id].SubItems[1].Text = "Failed"
         }
 
-        $control.Dispatcher.Invoke([Action]{ 
-            $currentStatus.Text = "Installation Complete!"
-            $progressBar.Value = 100
-        })
-        
-        Start-Sleep -Seconds 3
-        $control.Dispatcher.Invoke([Action]{ $window.Close() })
+        $index++
+        $progressBar.Value = [Math]::Floor(($index / $total) * 100)
+        [System.Windows.Forms.Application]::DoEvents()
     }
 
-    $thread = [System.Threading.Thread]::new($scriptBlock)
-    $thread.SetApartmentState([System.Threading.ApartmentState]::STA)
-    $thread.Start($apps, $window)
+    $statusLabel.Text = "Installation Complete!"
+    [System.Windows.Forms.Application]::DoEvents()
+    Start-Sleep -Seconds 3
+    $form.Close()
 })
 
-$window.ShowDialog()
+$form.ShowDialog()
 `
         // 2. Encode to Base64 UTF-16LE
         const toBase64 = (str: string) => {
@@ -282,12 +243,36 @@ $window.ShowDialog()
         const encodedPs = toBase64(psScript)
 
         // 3. Generate the Batch Wrapper
+        // This wrapper extracts the script to a file and executes it, bypassing command limits.
         const scriptContent = `@echo off
-set "params=%*"
-cd /d "%~dp0" && ( if exist "%temp%\\getadmin.vbs" del "%temp%\\getadmin.vbs" ) && fsutil dirty query %systemdrive% 1>nul 2>nul || (  echo Set UAC = CreateObject^("Shell.Application"^) : UAC.ShellExecute "cmd.exe", "/k cd ""%~sdp0"" && %~s0 %params%", "", "runas", 1 >> "%temp%\\getadmin.vbs" && "%temp%\\getadmin.vbs" && exit /B )
+setlocal enabledelayedexpansion
+title Kliiq Installer Setup
+cd /d "%~dp0"
 
-:: Running Kliiq Installer with Hidden Backdrop...
-powershell -NoProfile -ExecutionPolicy Bypass -WindowStyle Hidden -EncodedCommand ${encodedPs}
+:: Elevation Check
+fsutil dirty query %systemdrive% >nul 2>&1
+if %errorlevel% neq 0 (
+    echo Requesting Administrator permissions...
+    powershell -Command "Start-Process '%~f0' -Verb RunAs"
+    exit /b
+)
+
+:: Clear existing temp files
+set "SCRIPT_FILE=%TEMP%\\KliiqInstaller_%random%.ps1"
+set "B64_FILE=%TEMP%\\KliiqInstaller_%random%.b64"
+
+:: Write Base64 to a file
+echo ${encodedPs} > "!B64_FILE!"
+
+:: Decode Base64 to PS1 using Certutil (Native Windows tool)
+certutil -decode "!B64_FILE!" "!SCRIPT_FILE!" >nul 2>&1
+
+:: Run the script hidden
+powershell -NoProfile -ExecutionPolicy Bypass -WindowStyle Hidden -File "!SCRIPT_FILE!"
+
+:: Cleanup
+del "!B64_FILE!" >nul 2>&1
+del "!SCRIPT_FILE!" >nul 2>&1
 exit
 `
         // Create blob and download link
