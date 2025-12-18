@@ -1,6 +1,6 @@
-import { useState } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { motion } from 'framer-motion'
-import { Check, Download, Terminal } from 'lucide-react'
+import { Check, Download, Terminal, X, Minus, Square, ChevronDown, ChevronUp } from 'lucide-react'
 import { Button } from '../ui/Button'
 import { cn } from '../../lib/utils'
 
@@ -64,17 +64,80 @@ const categories = [
     }
 ]
 
+interface AppStatus {
+    id: string;
+    name: string;
+    status: 'Waiting' | 'Downloading' | 'Installing' | 'OK' | 'Skipped' | 'Failed';
+}
+
 export function AppInstaller() {
     const [selectedApps, setSelectedApps] = useState<string[]>([])
     const [isGenerating, setIsGenerating] = useState(false)
+    const [showGUI, setShowGUI] = useState(false)
+    const [appStatuses, setAppStatuses] = useState<AppStatus[]>([])
+    const [overallProgress, setOverallProgress] = useState(0)
+    const [showDetails, setShowDetails] = useState(true)
+    const [currentInstallingApp, setCurrentInstallingApp] = useState<string>("")
+    const simulationIntervalRef = useRef<NodeJS.Timeout | null>(null)
 
     const toggleApp = (id: string) => {
+        if (showGUI) return // Prevent selection while installing
         setSelectedApps(prev =>
             prev.includes(id)
                 ? prev.filter(appId => appId !== id)
                 : [...prev, id]
         )
     }
+
+    const startSimulation = (selectedAppIds: string[]) => {
+        const initialStatuses: AppStatus[] = categories
+            .flatMap(c => c.apps)
+            .filter(a => selectedAppIds.includes(a.id))
+            .map(a => ({ id: a.id, name: a.name, status: 'Waiting' }));
+
+        setAppStatuses(initialStatuses);
+        setOverallProgress(0);
+        setShowGUI(true);
+
+        let currentIndex = 0;
+        let progress = 0;
+
+        const runSimulation = () => {
+            if (currentIndex >= initialStatuses.length) {
+                if (simulationIntervalRef.current) clearInterval(simulationIntervalRef.current);
+                setOverallProgress(100);
+                setCurrentInstallingApp("Installation Complete!");
+                return;
+            }
+
+            const currentApp = initialStatuses[currentIndex];
+            setCurrentInstallingApp(`Installing ${currentApp.name}...`);
+
+            // Simulate steps: Waiting -> Downloading -> Installing -> OK
+            setAppStatuses(prev => prev.map((s, i) => {
+                if (i === currentIndex) {
+                    if (s.status === 'Waiting') return { ...s, status: 'Downloading' };
+                    if (s.status === 'Downloading') return { ...s, status: 'Installing' };
+                    if (s.status === 'Installing') {
+                        currentIndex++;
+                        return { ...s, status: 'OK' };
+                    }
+                }
+                return s;
+            }));
+
+            progress = Math.min(100, (currentIndex / initialStatuses.length) * 100);
+            setOverallProgress(progress);
+        };
+
+        simulationIntervalRef.current = setInterval(runSimulation, 1500);
+    }
+
+    useEffect(() => {
+        return () => {
+            if (simulationIntervalRef.current) clearInterval(simulationIntervalRef.current);
+        };
+    }, []);
 
     const generateInstaller = () => {
         setIsGenerating(true)
@@ -147,7 +210,15 @@ exit
         document.body.removeChild(a)
         window.URL.revokeObjectURL(url)
 
-        setTimeout(() => setIsGenerating(false), 1000)
+        setTimeout(() => {
+            setIsGenerating(false);
+            startSimulation(selectedApps);
+        }, 1000)
+    }
+
+    const closeGUI = () => {
+        if (simulationIntervalRef.current) clearInterval(simulationIntervalRef.current);
+        setShowGUI(false);
     }
 
     return (
@@ -230,9 +301,105 @@ exit
 
                     <p className="text-sm text-text-muted flex items-center gap-2">
                         <Terminal className="w-4 h-4" />
-                        Generates a PowerShell script compatible with Windows 10/11
+                        Kliiq works on Windows 11, 10, 8.x, 7, and equivalent Server versions.
                     </p>
+
                 </motion.div>
+
+                {/* GUI Installer Modal */}
+                {showGUI && (
+                    <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
+                        <motion.div
+                            initial={{ opacity: 0, scale: 0.9, y: 20 }}
+                            animate={{ opacity: 1, scale: 1, y: 0 }}
+                            className="bg-[#f0f0f0] w-full max-w-[500px] rounded-sm shadow-2xl border border-white/20 text-black overflow-hidden font-sans"
+                        >
+                            {/* Windows-like Title Bar */}
+                            <div className="bg-gradient-to-r from-[#0058d8] to-[#0096ff] p-2 flex items-center justify-between text-white">
+                                <div className="flex items-center gap-2">
+                                    <div className="w-4 h-4 bg-primary rounded-full flex items-center justify-center shadow-inner">
+                                        <div className="w-1.5 h-1.5 bg-background rounded-full" />
+                                    </div>
+                                    <span className="text-xs font-semibold">Kliiq Installer</span>
+                                </div>
+                                <div className="flex items-center">
+                                    <button onClick={closeGUI} className="p-1 hover:bg-white/20 transition-colors"><Minus className="w-3 h-3" /></button>
+                                    <button onClick={closeGUI} className="p-1 hover:bg-white/20 transition-colors"><Square className="w-3 h-3" /></button>
+                                    <button onClick={closeGUI} className="p-1 hover:bg-red-500 transition-colors"><X className="w-3 h-3" /></button>
+                                </div>
+                            </div>
+
+                            <div className="p-6 bg-white border-b border-gray-200">
+                                <h3 className="text-[15px] mb-4 text-gray-800">
+                                    {currentInstallingApp || "Initializing..."}
+                                </h3>
+
+                                <div className="h-6 w-full bg-[#e1e1e1] border border-gray-300 rounded-[2px] overflow-hidden mb-6">
+                                    <motion.div
+                                        initial={{ width: 0 }}
+                                        animate={{ width: `${overallProgress}%` }}
+                                        transition={{ duration: 0.5 }}
+                                        className="h-full bg-gradient-to-b from-[#28e028] to-[#1cb81c]"
+                                    />
+                                </div>
+
+                                <div className="flex items-center justify-between text-[11px] text-[#0066cc]">
+                                    <button
+                                        onClick={() => setShowDetails(!showDetails)}
+                                        className="hover:underline flex items-center gap-1"
+                                    >
+                                        {showDetails ? "Hide details" : "Show details"}
+                                        {showDetails ? <ChevronUp className="w-3 h-3" /> : <ChevronDown className="w-3 h-3" />}
+                                    </button>
+                                    <div className="flex items-center gap-4">
+                                        <button className="hover:underline">Write feedback</button>
+                                        <button
+                                            onClick={closeGUI}
+                                            className="px-4 py-1 bg-[#e1e1e1] border border-gray-400 rounded-sm hover:bg-[#d4d4d4] text-black shadow-sm"
+                                        >
+                                            Cancel
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+
+                            {/* Details Table */}
+                            {showDetails && (
+                                <div className="max-h-[200px] overflow-y-auto bg-white">
+                                    <table className="w-full text-[11px] border-collapse">
+                                        <thead className="sticky top-0 bg-white shadow-sm border-b border-gray-100">
+                                            <tr>
+                                                <th className="text-left px-4 py-1 font-normal text-gray-500 border-r border-gray-100 italic">Application</th>
+                                                <th className="text-left px-4 py-1 font-normal text-gray-500 italic">Status</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            {appStatuses.map((app) => (
+                                                <tr key={app.id} className="hover:bg-blue-50/30">
+                                                    <td className="px-4 py-1.5 border-r border-gray-50">{app.name}</td>
+                                                    <td className={cn(
+                                                        "px-4 py-1.5",
+                                                        app.status === 'OK' ? "text-green-600 font-medium" :
+                                                            app.status === 'Installing' ? "text-blue-600 animate-pulse" :
+                                                                app.status === 'Downloading' ? "text-orange-600" :
+                                                                    "text-gray-400"
+                                                    )}>
+                                                        {app.status}
+                                                    </td>
+                                                </tr>
+                                            ))}
+                                        </tbody>
+                                    </table>
+                                </div>
+                            )}
+
+                            {/* Footer placeholder for 'Ninite' feel */}
+                            <div className="p-2 bg-[#f0f0f0] border-t border-gray-200 flex justify-end">
+                                <span className="text-[9px] text-gray-400 italic">Kliiq Installer v1.0</span>
+                            </div>
+                        </motion.div>
+                    </div>
+                )}
 
             </div>
         </section>
