@@ -86,8 +86,26 @@ export function AppInstaller() {
             .map(a => `@{id="${a.id}"; name="${a.name}"}`);
 
         // Define the Native PowerShell GUI Script (Windows Forms)
-        // This is much more stable and handles threading more predictably in simple environments.
-        const psScript = `
+        // Wrapped in a Hybrid Polyglot CMD wrapper to prevent crashes.
+        const scriptContent = `<# :
+@echo off
+setlocal
+title Kliiq Installer Setup
+cd /d "%~dp0"
+
+:: Elevation Check
+fsutil dirty query %systemdrive% >nul 2>&1
+if %errorlevel% neq 0 (
+    echo Requesting Administrator permissions...
+    powershell -Command "Start-Process '%~f0' -Verb RunAs"
+    exit /b
+)
+
+:: Run self as PowerShell
+powershell -NoProfile -ExecutionPolicy Bypass -WindowStyle Hidden -Command "IEX ([System.IO.File]::ReadAllText('%~f0'))"
+exit /b
+#>
+
 Add-Type -AssemblyName System.Windows.Forms
 Add-Type -AssemblyName System.Drawing
 
@@ -100,7 +118,6 @@ $bgColor = [System.Drawing.Color]::FromArgb(240, 240, 240)
 $headerColor = [System.Drawing.Color]::FromArgb(0, 88, 216)
 $borderColor = [System.Drawing.Color]::FromArgb(204, 204, 204)
 $textColor = [System.Drawing.Color]::FromArgb(51, 51, 51)
-$linkFill = [System.Drawing.Color]::FromArgb(0, 102, 204)
 
 # --- Form Setup ---
 $form = New-Object System.Windows.Forms.Form
@@ -206,7 +223,6 @@ $form.Add_Shown({
         [System.Windows.Forms.Application]::DoEvents()
         
         try {
-            # Use winget with force-accept to avoid interactive prompts
             Start-Process "winget" -ArgumentList "install --id $($app.id) -e --accept-source-agreements --accept-package-agreements --source winget --silent" -Wait -NoNewWindow
             $listView.Items[$app.id].SubItems[1].Text = "OK"
         } catch {
@@ -226,55 +242,7 @@ $form.Add_Shown({
 
 $form.ShowDialog()
 `
-        // 2. Encode to Base64 UTF-16LE
-        const toBase64 = (str: string) => {
-            const codeUnits = new Uint16Array(str.length);
-            for (let i = 0; i < codeUnits.length; i++) {
-                codeUnits[i] = str.charCodeAt(i);
-            }
-            const charCodes = new Uint8Array(codeUnits.buffer);
-            let result = "";
-            for (let i = 0; i < charCodes.length; i += 8192) {
-                result += String.fromCharCode.apply(null, Array.from(charCodes.subarray(i, i + 8192)));
-            }
-            return btoa(result);
-        }
 
-        const encodedPs = toBase64(psScript)
-
-        // 3. Generate the Batch Wrapper
-        // This wrapper extracts the script to a file and executes it, bypassing command limits.
-        const scriptContent = `@echo off
-setlocal enabledelayedexpansion
-title Kliiq Installer Setup
-cd /d "%~dp0"
-
-:: Elevation Check
-fsutil dirty query %systemdrive% >nul 2>&1
-if %errorlevel% neq 0 (
-    echo Requesting Administrator permissions...
-    powershell -Command "Start-Process '%~f0' -Verb RunAs"
-    exit /b
-)
-
-:: Clear existing temp files
-set "SCRIPT_FILE=%TEMP%\\KliiqInstaller_%random%.ps1"
-set "B64_FILE=%TEMP%\\KliiqInstaller_%random%.b64"
-
-:: Write Base64 to a file
-echo ${encodedPs} > "!B64_FILE!"
-
-:: Decode Base64 to PS1 using Certutil (Native Windows tool)
-certutil -decode "!B64_FILE!" "!SCRIPT_FILE!" >nul 2>&1
-
-:: Run the script hidden
-powershell -NoProfile -ExecutionPolicy Bypass -WindowStyle Hidden -File "!SCRIPT_FILE!"
-
-:: Cleanup
-del "!B64_FILE!" >nul 2>&1
-del "!SCRIPT_FILE!" >nul 2>&1
-exit
-`
         // Create blob and download link
         const blob = new Blob([scriptContent], { type: 'text/plain' })
         const url = window.URL.createObjectURL(blob)
