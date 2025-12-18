@@ -78,7 +78,7 @@ export function AppInstaller() {
     const [overallProgress, setOverallProgress] = useState(0)
     const [showDetails, setShowDetails] = useState(true)
     const [currentInstallingApp, setCurrentInstallingApp] = useState<string>("")
-    const simulationIntervalRef = useRef<NodeJS.Timeout | null>(null)
+    const simulationIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null)
 
     const toggleApp = (id: string) => {
         if (showGUI) return // Prevent selection while installing
