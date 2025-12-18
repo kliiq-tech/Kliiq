@@ -63,8 +63,12 @@ $form.Size = New-Object System.Drawing.Size(500, 480)
 $form.BackColor = $bgColor
 $form.FormBorderStyle = 'FixedDialog'
 $form.MaximizeBox = $false
+$form.MinimizeBox = $true
 $form.StartPosition = 'CenterScreen'
 $form.TopMost = $true
+
+# Force the window to handle its own messages frequently
+$form.Add_Resize({ [System.Windows.Forms.Application]::DoEvents() })
 
 # --- Header ---
 $header = New-Object System.Windows.Forms.Panel
@@ -144,39 +148,60 @@ $form.Controls.Add($header)
 $form.Controls.Add($footerPanel)
 
 # --- Installation Logic ---
-$form.Add_Shown({
-    $form.Focus()
-    $total = $apps.Count
-    $index = 0
+\$form.Add_Shown({
+    \$form.Focus()
+    \$totalApps = \$apps.Count
+    \$currentAppIndex = 0
 
-    foreach ($app in $apps) {
-        $statusLabel.Text = "Installing $($app.name)..."
-        $targetItem = $listView.Items | Where-Object { $_.Name -eq $app.id }
-        if ($targetItem) { $targetItem.SubItems[1].Text = "Downloading" }
+    foreach (\$app in \$apps) {
+        \$currentAppIndex++
+        \$baseProgress = [Math]::Floor(((\$currentAppIndex - 1) / \$totalApps) * 100)
+        \$segmentSize = [Math]::Floor(100 / \$totalApps)
+
+        # Update Status to Downloading
+        \$statusLabel.Text = "Downloading \$(\$app.name)..."
+        \$targetItem = \$listView.Items | Where-Object { \$_.Name -eq \$app.id }
+        if (\$targetItem) { \$targetItem.SubItems[1].Text = "Downloading" }
+        
+        # Granular Progress: Move to 30% of this segment during "download" simulation
+        \$progressBar.Value = \$baseProgress + [Math]::Floor(\$segmentSize * 0.3)
+        [System.Windows.Forms.Application]::DoEvents()
+        Start-Sleep -Milliseconds 500
+
+        # Start Winget as a background process
+        \$statusLabel.Text = "Installing \$(\$app.name)..."
+        if (\$targetItem) { \$targetItem.SubItems[1].Text = "Installing" }
+        
+        # Granular Progress: Move to 60% of this segment
+        \$progressBar.Value = \$baseProgress + [Math]::Floor(\$segmentSize * 0.6)
         [System.Windows.Forms.Application]::DoEvents()
 
-        $proc = Start-Process "winget" -ArgumentList "install --id $($app.id) -e --accept-source-agreements --accept-package-agreements --source winget --silent" -PassThru -NoNewWindow
+        \$proc = Start-Process "winget" -ArgumentList "install --id \$(\$app.id) -e --accept-source-agreements --accept-package-agreements --source winget --silent" -PassThru -NoNewWindow -WindowStyle Hidden
         
-        while (!$proc.HasExited) {
+        # Keep window responsive while process runs
+        while (!\$proc.HasExited) {
             [System.Windows.Forms.Application]::DoEvents()
             Start-Sleep -Milliseconds 100
         }
 
-        if ($proc.ExitCode -eq 0) {
-            if ($targetItem) { $targetItem.SubItems[1].Text = "OK" }
+        # Update Status based on exit code
+        # 0 = Success, 0x8A150039 = Already installed
+        if (\$proc.ExitCode -eq 0 -or \$proc.ExitCode -eq 0x8A150039 -or \$proc.ExitCode -eq 2316697657) {
+            if (\$targetItem) { \$targetItem.SubItems[1].Text = "OK" }
         } else {
-            if ($targetItem) { $targetItem.SubItems[1].Text = "Failed" }
+            if (\$targetItem) { \$targetItem.SubItems[1].Text = "Failed" }
         }
 
-        $index++
-        $progressBar.Value = [Math]::Max(0, [Math]::Min(100, [Math]::Floor(($index / $total) * 100)))
+        # Granular Progress: Completion of this segment
+        \$progressBar.Value = \$baseProgress + \$segmentSize
         [System.Windows.Forms.Application]::DoEvents()
     }
 
-    $statusLabel.Text = "Installation Complete!"
+    \$progressBar.Value = 100
+    \$statusLabel.Text = "Installation Complete!"
     [System.Windows.Forms.Application]::DoEvents()
     Start-Sleep -Seconds 3
-    $form.Close()
+    \$form.Close()
 })
 
 $form.ShowDialog()
