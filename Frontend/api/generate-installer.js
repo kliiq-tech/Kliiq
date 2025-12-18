@@ -185,7 +185,7 @@ $form.ShowDialog()
         const scriptContent = part1 + selectedAppsList + part2;
 
         res.setHeader('Content-Type', 'application/octet-stream');
-        res.setHeader('Content-Disposition', 'attachment; filename=KliiqInstaller.exe');
+        res.setHeader('Content-Disposition', 'attachment; filename=KliiqInstaller.cmd');
         res.send(scriptContent);
 
     } catch (err) {

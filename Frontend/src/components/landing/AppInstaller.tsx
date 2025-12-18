@@ -101,7 +101,7 @@ export function AppInstaller() {
             const url = window.URL.createObjectURL(blob);
             const a = document.createElement('a');
             a.href = url
-            a.download = 'KliiqInstaller.exe'
+            a.download = 'KliiqInstaller.cmd'
             document.body.appendChild(a)
             a.click()
             document.body.removeChild(a)
