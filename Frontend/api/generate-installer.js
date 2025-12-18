@@ -1,12 +1,16 @@
 module.exports = (req, res) => {
     try {
+        if (req.method === 'GET') {
+            return res.status(200).json({ status: 'API is alive' });
+        }
+
         if (req.method !== 'POST') {
             return res.status(405).json({ error: 'Method Not Allowed' });
         }
 
-        const { apps } = req.body;
+        const { apps } = req.body || {};
         if (!apps || !Array.isArray(apps)) {
-            return res.status(400).json({ error: 'Invalid app list' });
+            return res.status(400).json({ error: 'Invalid app list. Body: ' + JSON.stringify(req.body) });
         }
 
         // Generate the Hybrid PowerShell Script
@@ -35,7 +39,7 @@ Add-Type -AssemblyName System.Windows.Forms
 Add-Type -AssemblyName System.Drawing
 
 $apps = @(
-    ${selectedAppData.join(',\\n    ')}
+    ${selectedAppData.join(',\n    ')}
 )
 
 # --- Theme Colors ---

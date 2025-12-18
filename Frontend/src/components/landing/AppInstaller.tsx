@@ -92,7 +92,10 @@ export function AppInstaller() {
                 body: JSON.stringify({ apps: selectedAppsData }),
             });
 
-            if (!response.ok) throw new Error('Failed to generate installer');
+            if (!response.ok) {
+                const errorData = await response.json().catch(() => ({}));
+                throw new Error(errorData.error || `Server error: ${response.status}`);
+            }
 
             const blob = await response.blob();
             const url = window.URL.createObjectURL(blob);
@@ -103,9 +106,9 @@ export function AppInstaller() {
             a.click()
             document.body.removeChild(a)
             window.URL.revokeObjectURL(url)
-        } catch (err) {
+        } catch (err: any) {
             console.error('Error generating installer:', err);
-            alert('Failed to generate installer. Please try again later.');
+            alert(err.message || 'Failed to generate installer. Please try again later.');
         } finally {
             setIsGenerating(false)
         }
