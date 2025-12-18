@@ -214,23 +214,30 @@ $form.Add_Shown({
     $index = 0
 
     foreach ($app in $apps) {
+        # Update Status to Downloading
         $statusLabel.Text = "Installing $($app.name)..."
-        $listView.Items[$app.id].SubItems[1].Text = "Downloading"
+        $targetItem = $listView.Items | Where-Object { $_.Name -eq $app.id }
+        if ($targetItem) { $targetItem.SubItems[1].Text = "Downloading" }
         [System.Windows.Forms.Application]::DoEvents()
-        Start-Sleep -Milliseconds 500
 
-        $listView.Items[$app.id].SubItems[1].Text = "Installing"
-        [System.Windows.Forms.Application]::DoEvents()
+        # Start Winget as a background process
+        $proc = Start-Process "winget" -ArgumentList "install --id $($app.id) -e --accept-source-agreements --accept-package-agreements --source winget --silent" -PassThru -NoNewWindow
         
-        try {
-            Start-Process "winget" -ArgumentList "install --id $($app.id) -e --accept-source-agreements --accept-package-agreements --source winget --silent" -Wait -NoNewWindow
-            $listView.Items[$app.id].SubItems[1].Text = "OK"
-        } catch {
-            $listView.Items[$app.id].SubItems[1].Text = "Failed"
+        # Keep window responsive while process runs
+        while (!$proc.HasExited) {
+            [System.Windows.Forms.Application]::DoEvents()
+            Start-Sleep -Milliseconds 100
+        }
+
+        # Update Status based on exit code
+        if ($proc.ExitCode -eq 0) {
+            if ($targetItem) { $targetItem.SubItems[1].Text = "OK" }
+        } else {
+            if ($targetItem) { $targetItem.SubItems[1].Text = "Failed" }
         }
 
         $index++
-        $progressBar.Value = [Math]::Floor(($index / $total) * 100)
+        $progressBar.Value = [Math]::Max(0, [Math]::Min(100, [Math]::Floor(($index / $total) * 100)))
         [System.Windows.Forms.Application]::DoEvents()
     }
 
