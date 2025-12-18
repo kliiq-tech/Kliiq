@@ -1,6 +1,6 @@
-import { useState, useEffect, useRef } from 'react'
+import { useState } from 'react'
 import { motion } from 'framer-motion'
-import { Check, Download, Terminal, X, Minus, Square, ChevronDown, ChevronUp } from 'lucide-react'
+import { Check, Download, Terminal } from 'lucide-react'
 import { Button } from '../ui/Button'
 import { cn } from '../../lib/utils'
 
@@ -64,24 +64,11 @@ const categories = [
     }
 ]
 
-interface AppStatus {
-    id: string;
-    name: string;
-    status: 'Waiting' | 'Downloading' | 'Installing' | 'OK' | 'Skipped' | 'Failed';
-}
-
 export function AppInstaller() {
     const [selectedApps, setSelectedApps] = useState<string[]>([])
     const [isGenerating, setIsGenerating] = useState(false)
-    const [showGUI, setShowGUI] = useState(false)
-    const [appStatuses, setAppStatuses] = useState<AppStatus[]>([])
-    const [overallProgress, setOverallProgress] = useState(0)
-    const [showDetails, setShowDetails] = useState(true)
-    const [currentInstallingApp, setCurrentInstallingApp] = useState<string>("")
-    const simulationIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null)
 
     const toggleApp = (id: string) => {
-        if (showGUI) return // Prevent selection while installing
         setSelectedApps(prev =>
             prev.includes(id)
                 ? prev.filter(appId => appId !== id)
@@ -89,90 +76,196 @@ export function AppInstaller() {
         )
     }
 
-    const startSimulation = (selectedAppIds: string[]) => {
-        const initialStatuses: AppStatus[] = categories
-            .flatMap(c => c.apps)
-            .filter(a => selectedAppIds.includes(a.id))
-            .map(a => ({ id: a.id, name: a.name, status: 'Waiting' }));
-
-        setAppStatuses(initialStatuses);
-        setOverallProgress(0);
-        setShowGUI(true);
-
-        let currentIndex = 0;
-        let progress = 0;
-
-        const runSimulation = () => {
-            if (currentIndex >= initialStatuses.length) {
-                if (simulationIntervalRef.current) clearInterval(simulationIntervalRef.current);
-                setOverallProgress(100);
-                setCurrentInstallingApp("Installation Complete!");
-                return;
-            }
-
-            const currentApp = initialStatuses[currentIndex];
-            setCurrentInstallingApp(`Installing ${currentApp.name}...`);
-
-            // Simulate steps: Waiting -> Downloading -> Installing -> OK
-            setAppStatuses(prev => prev.map((s, i) => {
-                if (i === currentIndex) {
-                    if (s.status === 'Waiting') return { ...s, status: 'Downloading' };
-                    if (s.status === 'Downloading') return { ...s, status: 'Installing' };
-                    if (s.status === 'Installing') {
-                        currentIndex++;
-                        return { ...s, status: 'OK' };
-                    }
-                }
-                return s;
-            }));
-
-            progress = Math.min(100, (currentIndex / initialStatuses.length) * 100);
-            setOverallProgress(progress);
-        };
-
-        simulationIntervalRef.current = setInterval(runSimulation, 1500);
-    }
-
-    useEffect(() => {
-        return () => {
-            if (simulationIntervalRef.current) clearInterval(simulationIntervalRef.current);
-        };
-    }, []);
-
     const generateInstaller = () => {
         setIsGenerating(true)
 
-        // 1. Define the Clean PowerShell Logic (No escaping needed here)
+        // Find the names of selected apps for the script
+        const selectedAppData = categories
+            .flatMap(c => c.apps)
+            .filter(a => selectedApps.includes(a.id))
+            .map(a => `@{id="${a.id}"; name="${a.name}"}`);
+
+        // Define the Native PowerShell GUI Script (WPF)
         const psScript = `
+Add-Type -AssemblyName PresentationFramework
+Add-Type -AssemblyName System.Windows.Forms
+
 $apps = @(
-${selectedApps.map(id => `    "${id}"`).join(',\n')}
+    ${selectedAppData.join(',\n    ')}
 )
 
-Clear-Host
-$host.UI.RawUI.WindowTitle = "Kliiq Installer"
-Write-Host "===========================================" -ForegroundColor Cyan
-Write-Host "        Kliiq Installer Starting..." -ForegroundColor Cyan
-Write-Host "===========================================" -ForegroundColor Cyan
-Write-Host ""
-Write-Host "Checking for permissions..." -ForegroundColor Gray
+$xaml = @"
+<Window xmlns="http://schemas.microsoft.com/winfx/2000/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2000/xaml"
+        Title="Kliiq Installer" Height="450" Width="500" Background="#F0F0F0"
+        WindowStartupLocation="CenterScreen" ResizeMode="NoResize" Topmost="True">
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+            <RowDefinition Height="Auto"/>
+        </Grid.RowDefinitions>
+        
+        <!-- Header -->
+        <Border Grid.Row="0" Background="LinearGradient 0,0 1,1">
+            <Border.Background>
+                <LinearGradientBrush StartPoint="0,0" EndPoint="1,0">
+                    <GradientStop Color="#0058d8" Offset="0.0" />
+                    <GradientStop Color="#0096ff" Offset="1.0" />
+                </LinearGradientBrush>
+            </Border.Background>
+            <StackPanel Orientation="Horizontal" Padding="10">
+                <Ellipse Width="16" Height="16" Fill="White" Margin="0,0,10,0"/>
+                <TextBlock Text="Kliiq Installer" Foreground="White" FontWeight="Bold" VerticalAlignment="Center"/>
+            </StackPanel>
+        </Border>
 
-foreach ($app in $apps) {
-    Write-Host "Installing $app..." -ForegroundColor Yellow
-    try {
-        winget install --id $app -e --accept-source-agreements --accept-package-agreements --source winget
-    } catch {
-        Write-Host "Failed to install $app" -ForegroundColor Red
-    }
-    Write-Host ""
+        <!-- Main Content -->
+        <StackPanel Grid.Row="1" Padding="25" Background="White">
+            <TextBlock Name="CurrentStatus" Text="Initializing..." FontSize="15" Margin="0,0,0,15" Foreground="#333333"/>
+            
+            <Border BorderBrush="#CCCCCC" BorderThickness="1" Height="25" CornerRadius="2" ClipToBounds="True">
+                <ProgressBar Name="OverallProgress" Minimum="0" Maximum="100" Value="0" Height="25" BorderThickness="0">
+                    <ProgressBar.Foreground>
+                        <LinearGradientBrush StartPoint="0,0" EndPoint="0,1">
+                            <GradientStop Color="#28e028" Offset="0.0" />
+                            <GradientStop Color="#1cb81c" Offset="1.0" />
+                        </LinearGradientBrush>
+                    </ProgressBar.Foreground>
+                </ProgressBar>
+            </Border>
+
+            <Grid Margin="0,15,0,0">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="Auto"/>
+                </Grid.ColumnDefinitions>
+                <Button Name="ToggleDetails" Content="Hide details ▲" Background="Transparent" BorderThickness="0" Foreground="#0066CC" HorizontalAlignment="Left" Cursor="Hand"/>
+                <StackPanel Grid.Column="1" Orientation="Horizontal">
+                    <Button Name="WriteFeedback" Content="Write feedback" Background="Transparent" BorderThickness="0" Foreground="#0066CC" Margin="0,0,20,0" Cursor="Hand"/>
+                    <Button Name="CancelBtn" Content="Cancel" Width="80" Padding="5" Background="#E1E1E1" BorderBrush="#AAAAAA" BorderThickness="1"/>
+                </StackPanel>
+            </Grid>
+
+            <ScrollViewer Name="DetailPanel" Margin="0,15,0,0" Height="180" VerticalScrollBarVisibility="Auto" BorderBrush="#EEEEEE" BorderThickness="1">
+                <ItemsControl Name="AppItems">
+                    <ItemsControl.ItemTemplate>
+                        <DataTemplate>
+                            <Grid Margin="0,0,0,2">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*"/>
+                                    <ColumnDefinition Width="150"/>
+                                </Grid.ColumnDefinitions>
+                                <Border BorderBrush="#F9F9F9" BorderThickness="0,0,1,1" Padding="8,4">
+                                    <TextBlock Text="{Binding name}" FontSize="12"/>
+                                </Border>
+                                <Border Grid.Column="1" BorderBrush="#F9F9F9" BorderThickness="0,0,0,1" Padding="8,4">
+                                    <TextBlock Text="{Binding status}" FontSize="12" Name="StatusText"/>
+                                </Border>
+                            </Grid>
+                        </DataTemplate>
+                    </ItemsControl.ItemTemplate>
+                </ItemsControl>
+            </ScrollViewer>
+        </StackPanel>
+
+        <!-- Footer -->
+        <Border Grid.Row="2" Background="#F0F0F0" Padding="5" BorderBrush="#CCCCCC" BorderThickness="0,1,0,0">
+            <TextBlock Text="Kliiq Installer v1.0" HorizontalAlignment="Right" FontSize="9" Foreground="#999999" FontStyle="Italic"/>
+        </Border>
+    </Grid>
+</Window>
+"@
+
+$reader = [XML.XmlReader]::Create([System.IO.StringReader] $xaml)
+$window = [Windows.Markup.XamlReader]::Load($reader)
+
+# Get UI Elements
+$currentStatus = $window.FindName("CurrentStatus")
+$progressBar = $window.FindName("OverallProgress")
+$appItems = $window.FindName("AppItems")
+$detailPanel = $window.FindName("DetailPanel")
+$toggleDetails = $window.FindName("ToggleDetails")
+$cancelBtn = $window.FindName("CancelBtn")
+
+# Setup App Data
+$observableApps = New-Object System.Collections.ObjectModel.ObservableCollection[PSObject]
+foreach($app in $apps) {
+    $observableApps.Add([PSCustomObject]@{id=$app.id; name=$app.name; status="Waiting"})
 }
+$appItems.ItemsSource = $observableApps
 
-Write-Host "-------------------------------------------" -ForegroundColor Green
-Write-Host "Installation Complete! Window will close in 3 seconds..." -ForegroundColor Green
-Start-Sleep -Seconds 3
+# Toggle Details Logic
+$toggleDetails.Add_Click({
+    if ($detailPanel.Visibility -eq "Visible") {
+        $detailPanel.Visibility = "Collapsed"
+        $toggleDetails.Content = "Show details ▼"
+        $window.Height = 250
+    } else {
+        $detailPanel.Visibility = "Visible"
+        $toggleDetails.Content = "Hide details ▲"
+        $window.Height = 450
+    }
+})
+
+$cancelBtn.Add_Click({ $window.Close() })
+
+# Background Installation Thread
+$window.Add_Loaded({
+    $scriptBlock = {
+        param($appsToInstall, $control)
+        
+        $count = 0
+        foreach ($app in $appsToInstall) {
+            $control.Dispatcher.Invoke([Action]{ 
+                $currentStatus.Text = "Installing $($app.name)..."
+            })
+
+            # Simulate Download
+            $control.Dispatcher.Invoke([Action]{ 
+                $observableApps | Where-Object { $_.id -eq $app.id } | ForEach-Object { $_.status = "Downloading" }
+                $appItems.Items.Refresh()
+            })
+            Start-Sleep -Milliseconds 800
+
+            # Real Installation
+            $control.Dispatcher.Invoke([Action]{ 
+                $observableApps | Where-Object { $_.id -eq $app.id } | ForEach-Object { $_.status = "Installing" }
+                $appItems.Items.Refresh()
+            })
+
+            try {
+                winget install --id $app.id -e --accept-source-agreements --accept-package-agreements --source winget --silent
+                $status = "OK"
+            } catch {
+                $status = "Failed"
+            }
+
+            $control.Dispatcher.Invoke([Action]{ 
+                $observableApps | Where-Object { $_.id -eq $app.id } | ForEach-Object { $_.status = $status }
+                $appItems.Items.Refresh()
+                $count++
+                $progressBar.Value = ($count / $appsToInstall.Count) * 100
+            })
+        }
+
+        $control.Dispatcher.Invoke([Action]{ 
+            $currentStatus.Text = "Installation Complete!"
+            $progressBar.Value = 100
+        })
+        
+        Start-Sleep -Seconds 3
+        $control.Dispatcher.Invoke([Action]{ $window.Close() })
+    }
+
+    $thread = [System.Threading.Thread]::new($scriptBlock)
+    $thread.SetApartmentState([System.Threading.ApartmentState]::STA)
+    $thread.Start($apps, $window)
+})
+
+$window.ShowDialog()
 `
-
-        // 2. Encode to Base64 UTF-16LE (Required for PowerShell -EncodedCommand)
-        // This makes the script bulletproof against special characters and 'batch' parsing errors.
+        // 2. Encode to Base64 UTF-16LE
         const toBase64 = (str: string) => {
             const codeUnits = new Uint16Array(str.length);
             for (let i = 0; i < codeUnits.length; i++) {
@@ -180,7 +273,6 @@ Start-Sleep -Seconds 3
             }
             const charCodes = new Uint8Array(codeUnits.buffer);
             let result = "";
-            // Process in chunks to avoid stack overflow on large strings
             for (let i = 0; i < charCodes.length; i += 8192) {
                 result += String.fromCharCode.apply(null, Array.from(charCodes.subarray(i, i + 8192)));
             }
@@ -190,13 +282,12 @@ Start-Sleep -Seconds 3
         const encodedPs = toBase64(psScript)
 
         // 3. Generate the Batch Wrapper
-        // This simple wrapper just asks PowerShell to run the encoded string as Admin.
         const scriptContent = `@echo off
 set "params=%*"
 cd /d "%~dp0" && ( if exist "%temp%\\getadmin.vbs" del "%temp%\\getadmin.vbs" ) && fsutil dirty query %systemdrive% 1>nul 2>nul || (  echo Set UAC = CreateObject^("Shell.Application"^) : UAC.ShellExecute "cmd.exe", "/k cd ""%~sdp0"" && %~s0 %params%", "", "runas", 1 >> "%temp%\\getadmin.vbs" && "%temp%\\getadmin.vbs" && exit /B )
 
-:: Running Kliiq Installer...
-powershell -NoProfile -ExecutionPolicy Bypass -EncodedCommand ${encodedPs}
+:: Running Kliiq Installer with Hidden Backdrop...
+powershell -NoProfile -ExecutionPolicy Bypass -WindowStyle Hidden -EncodedCommand ${encodedPs}
 exit
 `
         // Create blob and download link
@@ -210,15 +301,7 @@ exit
         document.body.removeChild(a)
         window.URL.revokeObjectURL(url)
 
-        setTimeout(() => {
-            setIsGenerating(false);
-            startSimulation(selectedApps);
-        }, 1000)
-    }
-
-    const closeGUI = () => {
-        if (simulationIntervalRef.current) clearInterval(simulationIntervalRef.current);
-        setShowGUI(false);
+        setTimeout(() => setIsGenerating(false), 1000)
     }
 
     return (
@@ -303,103 +386,7 @@ exit
                         <Terminal className="w-4 h-4" />
                         Kliiq works on Windows 11, 10, 8.x, 7, and equivalent Server versions.
                     </p>
-
                 </motion.div>
-
-                {/* GUI Installer Modal */}
-                {showGUI && (
-                    <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
-                        <motion.div
-                            initial={{ opacity: 0, scale: 0.9, y: 20 }}
-                            animate={{ opacity: 1, scale: 1, y: 0 }}
-                            className="bg-[#f0f0f0] w-full max-w-[500px] rounded-sm shadow-2xl border border-white/20 text-black overflow-hidden font-sans"
-                        >
-                            {/* Windows-like Title Bar */}
-                            <div className="bg-gradient-to-r from-[#0058d8] to-[#0096ff] p-2 flex items-center justify-between text-white">
-                                <div className="flex items-center gap-2">
-                                    <div className="w-4 h-4 bg-primary rounded-full flex items-center justify-center shadow-inner">
-                                        <div className="w-1.5 h-1.5 bg-background rounded-full" />
-                                    </div>
-                                    <span className="text-xs font-semibold">Kliiq Installer</span>
-                                </div>
-                                <div className="flex items-center">
-                                    <button onClick={closeGUI} className="p-1 hover:bg-white/20 transition-colors"><Minus className="w-3 h-3" /></button>
-                                    <button onClick={closeGUI} className="p-1 hover:bg-white/20 transition-colors"><Square className="w-3 h-3" /></button>
-                                    <button onClick={closeGUI} className="p-1 hover:bg-red-500 transition-colors"><X className="w-3 h-3" /></button>
-                                </div>
-                            </div>
-
-                            <div className="p-6 bg-white border-b border-gray-200">
-                                <h3 className="text-[15px] mb-4 text-gray-800">
-                                    {currentInstallingApp || "Initializing..."}
-                                </h3>
-
-                                <div className="h-6 w-full bg-[#e1e1e1] border border-gray-300 rounded-[2px] overflow-hidden mb-6">
-                                    <motion.div
-                                        initial={{ width: 0 }}
-                                        animate={{ width: `${overallProgress}%` }}
-                                        transition={{ duration: 0.5 }}
-                                        className="h-full bg-gradient-to-b from-[#28e028] to-[#1cb81c]"
-                                    />
-                                </div>
-
-                                <div className="flex items-center justify-between text-[11px] text-[#0066cc]">
-                                    <button
-                                        onClick={() => setShowDetails(!showDetails)}
-                                        className="hover:underline flex items-center gap-1"
-                                    >
-                                        {showDetails ? "Hide details" : "Show details"}
-                                        {showDetails ? <ChevronUp className="w-3 h-3" /> : <ChevronDown className="w-3 h-3" />}
-                                    </button>
-                                    <div className="flex items-center gap-4">
-                                        <button className="hover:underline">Write feedback</button>
-                                        <button
-                                            onClick={closeGUI}
-                                            className="px-4 py-1 bg-[#e1e1e1] border border-gray-400 rounded-sm hover:bg-[#d4d4d4] text-black shadow-sm"
-                                        >
-                                            Cancel
-                                        </button>
-                                    </div>
-                                </div>
-                            </div>
-
-                            {/* Details Table */}
-                            {showDetails && (
-                                <div className="max-h-[200px] overflow-y-auto bg-white">
-                                    <table className="w-full text-[11px] border-collapse">
-                                        <thead className="sticky top-0 bg-white shadow-sm border-b border-gray-100">
-                                            <tr>
-                                                <th className="text-left px-4 py-1 font-normal text-gray-500 border-r border-gray-100 italic">Application</th>
-                                                <th className="text-left px-4 py-1 font-normal text-gray-500 italic">Status</th>
-                                            </tr>
-                                        </thead>
-                                        <tbody>
-                                            {appStatuses.map((app) => (
-                                                <tr key={app.id} className="hover:bg-blue-50/30">
-                                                    <td className="px-4 py-1.5 border-r border-gray-50">{app.name}</td>
-                                                    <td className={cn(
-                                                        "px-4 py-1.5",
-                                                        app.status === 'OK' ? "text-green-600 font-medium" :
-                                                            app.status === 'Installing' ? "text-blue-600 animate-pulse" :
-                                                                app.status === 'Downloading' ? "text-orange-600" :
-                                                                    "text-gray-400"
-                                                    )}>
-                                                        {app.status}
-                                                    </td>
-                                                </tr>
-                                            ))}
-                                        </tbody>
-                                    </table>
-                                </div>
-                            )}
-
-                            {/* Footer placeholder for 'Ninite' feel */}
-                            <div className="p-2 bg-[#f0f0f0] border-t border-gray-200 flex justify-end">
-                                <span className="text-[9px] text-gray-400 italic">Kliiq Installer v1.0</span>
-                            </div>
-                        </motion.div>
-                    </div>
-                )}
 
             </div>
         </section>
