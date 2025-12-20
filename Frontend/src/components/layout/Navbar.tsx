@@ -14,9 +14,10 @@ export function Navbar() {
                 </Link>
 
                 <div className="hidden md:flex items-center space-x-8">
-                    <a href="#features" className="text-sm font-medium text-text-secondary hover:text-white transition-colors">Features</a>
-                    <a href="#how-it-works" className="text-sm font-medium text-text-secondary hover:text-white transition-colors">How it Works</a>
-                    <a href="#testimonials" className="text-sm font-medium text-text-secondary hover:text-white transition-colors">Testimonials</a>
+                    <Link to="/#faq" className="text-sm font-medium text-text-secondary hover:text-white transition-colors">FAQs</Link>
+                    <Link to="/#packs" className="text-sm font-medium text-text-secondary hover:text-white transition-colors">Software Packs</Link>
+                    <Link to="/pricing" className="text-sm font-medium text-text-secondary hover:text-white transition-colors">Pricing</Link>
+                    <Link to="/contact" className="text-sm font-medium text-text-secondary hover:text-white transition-colors">Contact Us</Link>
                 </div>
 
                 <div className="hidden md:flex items-center space-x-4">
@@ -36,8 +37,10 @@ export function Navbar() {
             {/* Mobile Menu */}
             {mobileMenuOpen && (
                 <div className="md:hidden bg-background/95 backdrop-blur-xl border-b border-white/5 p-4 space-y-4 shadow-2xl absolute top-full left-0 right-0">
-                    <a href="#features" className="block text-sm font-medium text-text-secondary hover:text-white" onClick={() => setMobileMenuOpen(false)}>Features</a>
-                    <a href="#how-it-works" className="block text-sm font-medium text-text-secondary hover:text-white" onClick={() => setMobileMenuOpen(false)}>How it Works</a>
+                    <Link to="/#faq" className="block text-sm font-medium text-text-secondary hover:text-white" onClick={() => setMobileMenuOpen(false)}>FAQs</Link>
+                    <Link to="/#packs" className="block text-sm font-medium text-text-secondary hover:text-white" onClick={() => setMobileMenuOpen(false)}>Software Packs</Link>
+                    <Link to="/pricing" className="block text-sm font-medium text-text-secondary hover:text-white" onClick={() => setMobileMenuOpen(false)}>Pricing</Link>
+                    <Link to="/contact" className="block text-sm font-medium text-text-secondary hover:text-white" onClick={() => setMobileMenuOpen(false)}>Contact Us</Link>
                     <Link to="/signin" className="block" onClick={() => setMobileMenuOpen(false)}>
                         <Button variant="ghost" className="w-full justify-start">Sign in</Button>
                     </Link>

@@ -1,4 +1,4 @@
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;700&display=swap');
 
 @tailwind base;
 @tailwind components;
@@ -12,6 +12,11 @@
 }
 
 @layer utilities {
+  .bg-grid-pattern {
+    background-image: radial-gradient(circle at 1px 1px, rgba(255, 255, 255, 0.05) 1px, transparent 0);
+    background-size: 40px 40px;
+  }
+
   .text-gradient {
     @apply bg-clip-text text-transparent bg-gradient-to-r from-primary to-primary-end;
   }
@@ -19,4 +24,30 @@
   .bg-brand-gradient {
     @apply bg-gradient-to-r from-primary to-primary-end;
   }
+
+  .glass-card {
+    @apply bg-surface/40 backdrop-blur-xl border border-white/5 shadow-2xl;
+  }
+
+  .glass-card-hover {
+    @apply hover:bg-surface/60 hover:border-white/10 transition-all duration-300;
+  }
+}
+
+/* Custom technical scrollbar */
+::-webkit-scrollbar {
+  width: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: #0B0D10;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #1F2937;
+  border-radius: 10px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #0A84FF;
 }

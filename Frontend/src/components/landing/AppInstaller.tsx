@@ -115,16 +115,18 @@ export function AppInstaller() {
     }
 
     return (
-        <section className="py-24 bg-background relative overflow-hidden border-t border-white/5">
-            <div className="container mx-auto px-4 md:px-6">
+        <section id="installer" className="py-24 bg-background relative overflow-hidden border-t border-white/5">
+            <div className="absolute inset-0 bg-grid-pattern opacity-5" />
+            <div className="container mx-auto px-4 md:px-6 relative z-10">
 
                 {/* Header */}
-                <div className="text-center mb-16">
-                    <h2 className="text-3xl font-bold tracking-tight text-white sm:text-4xl mb-4">
-                        1. Pick the apps you want
+                <div className="mb-20">
+                    <div className="text-primary font-mono text-xs mb-4 uppercase tracking-[0.3em]">Deployment Pipeline</div>
+                    <h2 className="text-3xl font-bold tracking-tight text-white sm:text-5xl mb-6">
+                        1. Select Your Infrastructure
                     </h2>
-                    <p className="text-text-secondary">
-                        Select your favorite tools and generate a custom installer script instantly.
+                    <p className="text-xl text-text-secondary max-w-2xl leading-relaxed">
+                        Set up your environment by selecting the core tools required for your workflow.
                     </p>
                 </div>
 
@@ -167,11 +169,16 @@ export function AppInstaller() {
                 <motion.div
                     initial={{ opacity: 0, y: 20 }}
                     whileInView={{ opacity: 1, y: 0 }}
-                    className="flex flex-col items-center justify-center space-y-6 text-center pt-8 border-t border-white/10 max-w-3xl mx-auto"
+                    className="flex flex-col items-center justify-center space-y-8 text-center pt-16 border-t border-white/5 max-w-4xl mx-auto"
                 >
-                    <h3 className="text-2xl font-bold text-white">
-                        2. Download and run your custom installer
-                    </h3>
+                    <div className="space-y-4">
+                        <h3 className="text-2xl font-bold text-white sm:text-3xl">
+                            2. Deploy Your Custom Stack
+                        </h3>
+                        <p className="text-text-secondary max-w-xl mx-auto">
+                            Generate your specialized Kliiq deployment script and manage your entire lifecycle with zero technical friction.
+                        </p>
+                    </div>
 
                     <Button
                         size="lg"

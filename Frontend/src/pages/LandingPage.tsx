@@ -5,7 +5,8 @@ import { WhyKliiq } from '../components/landing/WhyKliiq'
 import { HowItWorks } from '../components/landing/HowItWorks'
 import { TargetAudience } from '../components/landing/TargetAudience'
 import { AppInstaller } from '../components/landing/AppInstaller'
-import { Security } from '../components/landing/Security'
+import { SoftwarePacks } from '../components/landing/SoftwarePacks'
+import { FAQ } from '../components/landing/FAQ'
 
 export function LandingPage() {
     return (
@@ -14,10 +15,11 @@ export function LandingPage() {
             <WhyKliiq />
             <Features />
             <AppInstaller />
+            <SoftwarePacks />
             <HowItWorks />
             <TargetAudience />
             <Testimonials />
-            <Security />
+            <FAQ />
         </div>
     )
 }
