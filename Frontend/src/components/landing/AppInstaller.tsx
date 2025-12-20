@@ -89,23 +89,28 @@ export function AppInstaller() {
             return;
         }
 
-        // Generate native PowerShell script
-        // 1. Checks for Admin privileges (auto-elevates if needed)
-        // 2. Installs selected apps using object array for better logging
+        // Generate Hybrid Chimera script (.bat extension, PowerShell content)
+        // 1. Batch wrapper bypasses PowerShell Execution Policy
+        // 2. PowerShell block handles elevation and app installation
         const appsList = selectedAppsData.map(app =>
             `    @{ Name = "${app.name}"; Id = "${app.id}" }`
         ).join(',\n');
 
-        const scriptContent = `# Kliiq Installer
+        const scriptContent = `<# :
+@echo off
+powershell -NoProfile -ExecutionPolicy Bypass -Command "iex ((Get-Content -LiteralPath '%~f0' -Raw))"
+exit /b
+#>
+
+# Kliiq Installer - Hybrid Script
 # Generated: ${new Date().toLocaleString()}
 
-# Check for Admin privileges and self-elevate if needed
+# Check for Admin privileges
 $currentPrincipal = [Security.Principal.WindowsPrincipal][Security.Principal.WindowsIdentity]::GetCurrent()
-$isCmdAdmin = $currentPrincipal.IsInRole([Security.Principal.WindowsBuiltInRole]::Administrator)
-
-if (!$isCmdAdmin) {
+if (!$currentPrincipal.IsInRole([Security.Principal.WindowsBuiltInRole]::Administrator)) {
     Write-Host "Requesting admin privileges..." -ForegroundColor Yellow
-    Start-Process powershell.exe "-NoProfile -ExecutionPolicy Bypass -File \`"$PSCommandPath\`"" -Verb RunAs
+    # Re-launch the batch file as admin to maintain policy bypass
+    Start-Process "$env:ComSpec" "/c \`"$PSCommandPath\`"" -Verb RunAs
     exit
 }
 
@@ -130,12 +135,12 @@ Write-Host "Installation Process Complete." -ForegroundColor Green
 Write-Host ""
 Read-Host "Press Enter to exit"
 `
-        // Create blob and download link
+        // Create blob and download link as .bat
         const blob = new Blob([scriptContent], { type: 'text/plain' })
         const url = window.URL.createObjectURL(blob)
         const a = document.createElement('a')
         a.href = url
-        a.download = 'KliiqInstaller.ps1'
+        a.download = 'KliiqInstaller.bat'
         document.body.appendChild(a)
         a.click()
         document.body.removeChild(a)
@@ -143,7 +148,7 @@ Read-Host "Press Enter to exit"
 
         setTimeout(() => {
             setIsGenerating(false);
-            alert(`✅ Kliiq Installer downloaded!\n\nIMPORTANT:\n1. Open your Downloads folder\n2. RIGHT-CLICK KliiqInstaller.ps1\n3. Select "Run with PowerShell"`);
+            alert(`✅ Kliiq Installer downloaded!\n\nTo install your apps:\n1. Open your Downloads folder\n2. DOUBLE-CLICK KliiqInstaller.bat\n3. Click "Run" if Windows warns you\n4. Watch your apps install!`);
         }, 1000)
     }
 
