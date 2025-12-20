@@ -18,7 +18,7 @@ export function Hero() {
                     initial={{ opacity: 0, y: 20 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ duration: 0.5, delay: 0.1 }}
-                    className="mx-auto max-w-4xl text-5xl font-bold tracking-tight text-white md:text-7xl lg:text-8xl mb-6"
+                    className="mx-auto max-w-4xl text-5xl font-bold tracking-tight text-white md:text-7xl lg:text-7xl mb-6"
                 >
                     Install Smarter. <br />
                     <span className="text-transparent bg-clip-text bg-gradient-to-r from-primary via-accent to-primary-end">Optimize Instantly.</span>
@@ -117,7 +117,7 @@ export function Hero() {
                         <img
                             src="/assets/dashboard-hero.png"
                             alt="Kliiq Dashboard Interface"
-                            className="w-full h-full object-contain object-center"
+                            className="w-full h-full object-cover object-top"
                         />
                         {/* Reflection/Sheen - subtle */}
                         <div className="absolute inset-0 bg-gradient-to-tr from-white/5 to-transparent pointer-events-none opacity-50" />

@@ -143,7 +143,7 @@ export function AppInstaller() {
                                         className="flex items-center space-x-3 cursor-pointer group select-none"
                                     >
                                         <div className={cn(
-                                            "w-5 h-5 rounded border border-white/20 flex items-center justify-center transition-all duration-200",
+                                            "w-5 h-5 rounded border border-white/20 flex items-center justify-center transition-all duration-200 flex-shrink-0",
                                             selectedApps.includes(app.id)
                                                 ? "bg-primary border-primary text-black"
                                                 : "bg-surface group-hover:border-primary/50"
