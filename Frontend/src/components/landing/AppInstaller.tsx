@@ -79,14 +79,31 @@ export function AppInstaller() {
     const generateInstaller = () => {
         setIsGenerating(true)
 
+        const selectedAppsData = categories
+            .flatMap(c => c.apps)
+            .filter(a => selectedApps.includes(a.id));
+
+        if (selectedAppsData.length === 0) {
+            alert('Please select at least one app to install.');
+            setIsGenerating(false);
+            return;
+        }
+
         // Generate native PowerShell script
         // 1. Checks for Admin privileges (auto-elevates if needed)
-        // 2. Installs selecting apps
+        // 2. Installs selected apps using object array for better logging
+        const appsList = selectedAppsData.map(app =>
+            `    @{ Name = "${app.name}"; Id = "${app.id}" }`
+        ).join(',\n');
+
         const scriptContent = `# Kliiq Installer
 # Generated: ${new Date().toLocaleString()}
 
 # Check for Admin privileges and self-elevate if needed
-if (!([Security.Principal.WindowsPrincipal][Security.Principal.WindowsIdentity]::GetCurrent()).IsInRole([Security.Principal.WindowsBuiltInRole]::Administrator)) {
+$currentPrincipal = [Security.Principal.WindowsPrincipal][Security.Principal.WindowsIdentity]::GetCurrent()
+$isCmdAdmin = $currentPrincipal.IsInRole([Security.Principal.WindowsBuiltInRole]::Administrator)
+
+if (!$isCmdAdmin) {
     Write-Host "Requesting admin privileges..." -ForegroundColor Yellow
     Start-Process powershell.exe "-NoProfile -ExecutionPolicy Bypass -File \`"$PSCommandPath\`"" -Verb RunAs
     exit
@@ -99,12 +116,12 @@ Write-Host "===========================================" -ForegroundColor Cyan
 Write-Host ""
 
 $apps = @(
-${selectedApps.map(id => `    "${id}"`).join(',\n')}
+${appsList}
 )
 
 foreach ($app in $apps) {
-    Write-Host "Installing $app..." -ForegroundColor Yellow
-    winget install --id $app -e --accept-source-agreements --accept-package-agreements
+    Write-Host "Installing $($app.Name)..." -ForegroundColor Yellow
+    winget install --id $app.Id -e --accept-source-agreements --accept-package-agreements
     Write-Host ""
 }
 
