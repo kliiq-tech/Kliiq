@@ -98,7 +98,8 @@ export function AppInstaller() {
 
         const scriptContent = `<# :
 @echo off
-powershell -NoProfile -ExecutionPolicy Bypass -Command "iex ((Get-Content -LiteralPath '%~f0' -Raw))"
+:: Passing the script path explicitly to avoid issues in the 'iex' context
+powershell -NoProfile -ExecutionPolicy Bypass -Command "$scriptPath='%~f0'; iex ((Get-Content -LiteralPath '%~f0' -Raw))"
 exit /b
 #>
 
@@ -109,8 +110,8 @@ exit /b
 $currentPrincipal = [Security.Principal.WindowsPrincipal][Security.Principal.WindowsIdentity]::GetCurrent()
 if (!$currentPrincipal.IsInRole([Security.Principal.WindowsBuiltInRole]::Administrator)) {
     Write-Host "Requesting admin privileges..." -ForegroundColor Yellow
-    # Re-launch the batch file as admin to maintain policy bypass
-    Start-Process "$env:ComSpec" "/c \`"$PSCommandPath\`"" -Verb RunAs
+    # Re-launch the batch file as admin to maintain policy bypass, using the explicit scriptPath
+    Start-Process "$env:ComSpec" "/c \`"$scriptPath\`"" -Verb RunAs
     exit
 }
 
