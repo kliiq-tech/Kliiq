@@ -79,43 +79,57 @@ export function AppInstaller() {
     const generateInstaller = () => {
         setIsGenerating(true)
 
-        // Generate PowerShell script with self-elevation
+        // Generate PowerShell script (Pure .ps1)
+        // Removed self-elevation to avoid double-prompts. Winget handles elevation if needed.
         const scriptContent = `# Kliiq Installer Function
 # Generated: ${new Date().toLocaleString()}
 
-# Self-elevate to Admin if needed
-if (!([Security.Principal.WindowsPrincipal][Security.Principal.WindowsIdentity]::GetCurrent()).IsInRole([Security.Principal.WindowsBuiltInRole]::Administrator)) {
-    Write-Host "Requesting admin privileges..." -ForegroundColor Yellow
-    Start-Process powershell.exe "-NoProfile -ExecutionPolicy Bypass -File \`"$PSCommandPath\`"" -Verb RunAs
-    exit
-}
-
-# Main Installer Logic
 Clear-Host
 Write-Host "============================" -ForegroundColor Cyan
 Write-Host "   Kliiq Software Installer" -ForegroundColor Cyan
 Write-Host "============================" -ForegroundColor Cyan
+Write-Host ""
+Write-Host "Note: You may be prompted for Admin permissions during installation." -ForegroundColor Gray
 Write-Host ""
 
 $apps = @(
 ${selectedApps.map(id => `    "${id}"`).join(',\n')}
 )
 
+$successCount = 0
+$failCount = 0
+
 foreach ($app in $apps) {
     Write-Host "Installing $app..." -ForegroundColor Yellow
     
-    # Install using winget
-    winget install --id $app -e --accept-source-agreements --accept-package-agreements --silent
-    
-    if ($LASTEXITCODE -eq 0) {
-        Write-Host "Successfully installed $app" -ForegroundColor Green
-    } else {
-        Write-Host "Failed to install $app" -ForegroundColor Red
+    try {
+        # Install using winget with robust error handling
+        # --force prevents some 'already installed' errors from hanging
+        # --disable-interactivity prevents blocking on prompts
+        $installResult = winget install --id $app -e --accept-source-agreements --accept-package-agreements --silent --force --disable-interactivity 2>&1
+        
+        if ($LASTEXITCODE -eq 0) {
+            Write-Host "Successfully installed $app" -ForegroundColor Green
+            $successCount++
+        } else {
+            Write-Host "Failed to install $app (Exit Code: $LASTEXITCODE)" -ForegroundColor Red
+            # Optional: Write detailed error if needed
+            # Write-Host $installResult
+            $failCount++
+        }
+    } catch {
+        Write-Host "Error installing $app : $_" -ForegroundColor Red
+        $failCount++
     }
     Write-Host ""
 }
 
-Write-Host "Installation Complete!" -ForegroundColor Green
+Write-Host "============================" -ForegroundColor Cyan
+Write-Host "Installation Summary" -ForegroundColor Cyan
+Write-Host "Installed: $successCount" -ForegroundColor Green
+Write-Host "Failed:    $failCount" -ForegroundColor Red
+Write-Host "============================" -ForegroundColor Cyan
+Write-Host ""
 Write-Host "Press Enter to exit..."
 Read-Host
 `
@@ -134,7 +148,7 @@ Read-Host
 
             setTimeout(() => {
                 setIsGenerating(false)
-                alert(`✅ Kliiq Installer downloaded!\n\nTo install your apps:\n1. Right-click "KliiqInstaller.ps1"\n2. Select "Run with PowerShell"\n3. Click "Yes" to allow Admin access`)
+                alert(`✅ Kliiq Installer downloaded!\n\nTo install your apps:\n1. Right-click "KliiqInstaller.ps1"\n2. Select "Run with PowerShell"\n3. If prompted with a blue screen, type "A" and press Enter to allow the script.`)
             }, 1000)
         } catch (err) {
             console.error('Download failed:', err)
