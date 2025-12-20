@@ -47,7 +47,7 @@ export function Hero() {
                             <ArrowRight className="ml-2 h-5 w-5 transition-transform group-hover:translate-x-1" />
                         </Button>
                     </Link>
-                    <Link to="/signin">
+                    <Link to="/docs">
                         <Button variant="ghost" size="lg" className="h-14 px-8 text-lg font-semibold border border-white/5 hover:bg-white/5 transition-colors">
                             View Documentation
                         </Button>

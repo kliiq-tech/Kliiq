@@ -15,7 +15,7 @@ export function Navbar() {
 
                 <div className="hidden md:flex items-center space-x-8">
                     <Link to="/#faq" className="text-sm font-medium text-text-secondary hover:text-white transition-colors">FAQs</Link>
-                    <Link to="/#packs" className="text-sm font-medium text-text-secondary hover:text-white transition-colors">Software Packs</Link>
+                    <Link to="/docs" className="text-sm font-medium text-text-secondary hover:text-white transition-colors">Documentation</Link>
                     <Link to="/pricing" className="text-sm font-medium text-text-secondary hover:text-white transition-colors">Pricing</Link>
                     <Link to="/contact" className="text-sm font-medium text-text-secondary hover:text-white transition-colors">Contact Us</Link>
                 </div>
@@ -38,7 +38,7 @@ export function Navbar() {
             {mobileMenuOpen && (
                 <div className="md:hidden bg-background/95 backdrop-blur-xl border-b border-white/5 p-4 space-y-4 shadow-2xl absolute top-full left-0 right-0">
                     <Link to="/#faq" className="block text-sm font-medium text-text-secondary hover:text-white" onClick={() => setMobileMenuOpen(false)}>FAQs</Link>
-                    <Link to="/#packs" className="block text-sm font-medium text-text-secondary hover:text-white" onClick={() => setMobileMenuOpen(false)}>Software Packs</Link>
+                    <Link to="/docs" className="block text-sm font-medium text-text-secondary hover:text-white" onClick={() => setMobileMenuOpen(false)}>Documentation</Link>
                     <Link to="/pricing" className="block text-sm font-medium text-text-secondary hover:text-white" onClick={() => setMobileMenuOpen(false)}>Pricing</Link>
                     <Link to="/contact" className="block text-sm font-medium text-text-secondary hover:text-white" onClick={() => setMobileMenuOpen(false)}>Contact Us</Link>
                     <Link to="/signin" className="block" onClick={() => setMobileMenuOpen(false)}>
