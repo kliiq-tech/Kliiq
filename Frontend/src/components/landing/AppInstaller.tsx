@@ -90,20 +90,14 @@ export function AppInstaller() {
                 return;
             }
 
-            // Generate PowerShell script with Windows Forms GUI
-            const scriptContent = `# Kliiq Installer - GUI Version
-# Generated: ${new Date().toLocaleString()}
-# Apps: ${selectedAppsData.map(a => a.name).join(', ')}
-
-Add-Type -AssemblyName System.Windows.Forms
+            // Generate PowerShell script with Windows Forms GUI (base64 encoded to avoid escaping issues)
+            const psScript = `Add-Type -AssemblyName System.Windows.Forms
 Add-Type -AssemblyName System.Drawing
 
-# App data
 $apps = @(
-${selectedAppsData.map(app => `    @{ Name = "${app.name}"; Id = "${app.id}"; Status = "Pending" }`).join('\n')}
+${selectedAppsData.map(app => `    @{ Name = "${app.name}"; Id = "${app.id}" }`).join(',\n')}
 )
 
-# Create main form
 $form = New-Object System.Windows.Forms.Form
 $form.Text = "Kliiq Installer"
 $form.Size = New-Object System.Drawing.Size(600, 500)
@@ -112,7 +106,6 @@ $form.FormBorderStyle = "FixedDialog"
 $form.MaximizeBox = $false
 $form.BackColor = [System.Drawing.Color]::FromArgb(15, 15, 20)
 
-# Header label
 $headerLabel = New-Object System.Windows.Forms.Label
 $headerLabel.Location = New-Object System.Drawing.Point(20, 20)
 $headerLabel.Size = New-Object System.Drawing.Size(560, 40)
@@ -121,7 +114,6 @@ $headerLabel.Font = New-Object System.Drawing.Font("Segoe UI", 18, [System.Drawi
 $headerLabel.ForeColor = [System.Drawing.Color]::White
 $form.Controls.Add($headerLabel)
 
-# Status label
 $statusLabel = New-Object System.Windows.Forms.Label
 $statusLabel.Location = New-Object System.Drawing.Point(20, 70)
 $statusLabel.Size = New-Object System.Drawing.Size(560, 25)
@@ -130,15 +122,12 @@ $statusLabel.Font = New-Object System.Drawing.Font("Segoe UI", 11)
 $statusLabel.ForeColor = [System.Drawing.Color]::FromArgb(160, 160, 180)
 $form.Controls.Add($statusLabel)
 
-# Progress bar
 $progressBar = New-Object System.Windows.Forms.ProgressBar
 $progressBar.Location = New-Object System.Drawing.Point(20, 105)
 $progressBar.Size = New-Object System.Drawing.Size(560, 25)
 $progressBar.Maximum = $apps.Count
-$progressBar.Value = 0
 $form.Controls.Add($progressBar)
 
-# App list box
 $listBox = New-Object System.Windows.Forms.ListBox
 $listBox.Location = New-Object System.Drawing.Point(20, 145)
 $listBox.Size = New-Object System.Drawing.Size(560, 250)
@@ -148,7 +137,6 @@ $listBox.ForeColor = [System.Drawing.Color]::White
 $listBox.BorderStyle = "None"
 $form.Controls.Add($listBox)
 
-# Close button (initially disabled)
 $closeButton = New-Object System.Windows.Forms.Button
 $closeButton.Location = New-Object System.Drawing.Point(480, 410)
 $closeButton.Size = New-Object System.Drawing.Size(100, 35)
@@ -158,10 +146,7 @@ $closeButton.Font = New-Object System.Drawing.Font("Segoe UI", 10)
 $closeButton.Add_Click({ $form.Close() })
 $form.Controls.Add($closeButton)
 
-# Show form
 $form.Show()
-
-# Check winget
 $listBox.Items.Add("Checking for winget...")
 $form.Refresh()
 Start-Sleep -Milliseconds 500
@@ -169,84 +154,83 @@ Start-Sleep -Milliseconds 500
 try {
     $null = Get-Command winget -ErrorAction Stop
     $listBox.Items.Add("[OK] Winget is available")
+    $listBox.Items.Add("")
+    $form.Refresh()
 } catch {
     $listBox.Items.Add("[ERROR] Winget not found!")
-    $listBox.Items.Add("Please install Windows App Installer from Microsoft Store")
+    $listBox.Items.Add("Install Windows App Installer from Microsoft Store")
     $statusLabel.Text = "Installation failed"
     $statusLabel.ForeColor = [System.Drawing.Color]::FromArgb(255, 100, 100)
     $closeButton.Enabled = $true
     $form.Refresh()
     [System.Windows.Forms.Application]::Run($form)
-    exit 1
+    exit
 }
 
-$listBox.Items.Add("")
-$form.Refresh()
-
-# Install each app
 $successCount = 0
 $failCount = 0
 
 for ($i = 0; $i -lt $apps.Count; $i++) {
     $app = $apps[$i]
-    $statusLabel.Text = "Installing $($app.Name)... ($($i + 1)/$($apps.Count))"
-    $listBox.Items.Add("[$($i + 1)/$($apps.Count)] Installing $($app.Name)...")
+    $statusLabel.Text = "Installing " + $app.Name + "... (" + ($i + 1) + "/" + $apps.Count + ")"
+    $listBox.Items.Add("[" + ($i + 1) + "/" + $apps.Count + "] Installing " + $app.Name + "...")
     $form.Refresh()
     
     try {
-        $output = winget install --id $($app.Id) --silent --accept-package-agreements --accept-source-agreements 2>&1
+        winget install --id $app.Id --silent --accept-package-agreements --accept-source-agreements | Out-Null
         
         if ($LASTEXITCODE -eq 0) {
-            $listBox.Items.Add("    ✓ $($app.Name) installed successfully")
-            $listBox.ForeColor = [System.Drawing.Color]::FromArgb(100, 255, 100)
+            $listBox.Items.Add("    ✓ " + $app.Name + " installed successfully")
             $successCount++
         } else {
-            $listBox.Items.Add("    ✗ $($app.Name) installation failed")
-            $listBox.ForeColor = [System.Drawing.Color]::FromArgb(255, 100, 100)
+            $listBox.Items.Add("    ✗ " + $app.Name + " installation failed")
             $failCount++
         }
     } catch {
-        $listBox.Items.Add("    ✗ Error: $_")
-        $listBox.ForeColor = [System.Drawing.Color]::FromArgb(255, 100, 100)
+        $listBox.Items.Add("    ✗ Error installing " + $app.Name)
         $failCount++
     }
     
     $progressBar.Value = $i + 1
     $listBox.Items.Add("")
     $form.Refresh()
-    Start-Sleep -Milliseconds 300
 }
 
-# Summary
 $listBox.Items.Add("========================================")
 $listBox.Items.Add("Installation Complete!")
 $listBox.Items.Add("========================================")
-$listBox.Items.Add("Successfully installed: $successCount app(s)")
-$listBox.Items.Add("Failed: $failCount app(s)")
-$listBox.Items.Add("")
-$listBox.Items.Add("You can close this window now.")
+$listBox.Items.Add("Successfully installed: " + $successCount + " app(s)")
+$listBox.Items.Add("Failed: " + $failCount + " app(s)")
 
 if ($failCount -eq 0) {
     $statusLabel.Text = "All applications installed successfully!"
     $statusLabel.ForeColor = [System.Drawing.Color]::FromArgb(100, 255, 100)
 } else {
-    $statusLabel.Text = "Installation completed with $failCount error(s)"
+    $statusLabel.Text = "Installation completed with " + $failCount + " error(s)"
     $statusLabel.ForeColor = [System.Drawing.Color]::FromArgb(255, 200, 100)
 }
 
 $closeButton.Enabled = $true
 $form.Refresh()
+[System.Windows.Forms.Application]::Run($form)`;
 
-# Keep form open
-[System.Windows.Forms.Application]::Run($form)
+            // Encode PowerShell script to base64
+            const psScriptBase64 = btoa(unescape(encodeURIComponent(psScript)));
+
+            // Create batch file that runs PowerShell with bypass
+            const batchContent = `@echo off
+:: Kliiq Installer - Generated ${new Date().toLocaleString()}
+:: Apps: ${selectedAppsData.map(a => a.name).join(', ')}
+
+powershell.exe -NoProfile -ExecutionPolicy Bypass -EncodedCommand ${psScriptBase64}
 `;
 
-            // Create blob and download
-            const blob = new Blob([scriptContent], { type: 'text/plain' });
+            // Create blob and download as .bat file
+            const blob = new Blob([batchContent], { type: 'text/plain' });
             const url = window.URL.createObjectURL(blob);
             const a = document.createElement('a');
             a.href = url;
-            a.download = 'KliiqInstaller.ps1';
+            a.download = 'KliiqInstaller.bat';
             document.body.appendChild(a);
             a.click();
             document.body.removeChild(a);
@@ -254,7 +238,7 @@ $form.Refresh()
 
             // Show success message
             setTimeout(() => {
-                alert(`✅ Kliiq Installer downloaded!\n\nTo install your apps:\n1. Right-click KliiqInstaller.ps1\n2. Select "Run with PowerShell"\n3. A GUI window will appear showing installation progress`);
+                alert(`✅ Kliiq Installer downloaded!\n\nTo install your apps:\n1. Double-click KliiqInstaller.bat\n2. A GUI window will appear automatically\n3. Watch your apps install!\n\nNo PowerShell prompts - just double-click and go!`);
             }, 500);
 
         } catch (err: any) {
