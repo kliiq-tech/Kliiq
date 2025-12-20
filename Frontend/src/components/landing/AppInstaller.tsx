@@ -32,7 +32,7 @@ const categories = [
             { id: "Git.Git", name: "Git" },
             { id: "OpenJS.NodeJS", name: "Node.js" },
             { id: "Docker.DockerDesktop", name: "Docker" },
-            { id: "Anysphere.Cursor", name: "Cursor" },
+            { id: "Cursor.Cursor", name: "Cursor" },
         ]
     },
     {
@@ -79,78 +79,55 @@ export function AppInstaller() {
     const generateInstaller = () => {
         setIsGenerating(true)
 
-        // Generate PowerShell script (Pure .ps1)
-        const scriptContent = `# Kliiq Installer Function
+        // Generate native PowerShell script
+        // 1. Checks for Admin privileges (auto-elevates if needed)
+        // 2. Installs selecting apps
+        const scriptContent = `# Kliiq Installer
 # Generated: ${new Date().toLocaleString()}
 
+# Check for Admin privileges and self-elevate if needed
+if (!([Security.Principal.WindowsPrincipal][Security.Principal.WindowsIdentity]::GetCurrent()).IsInRole([Security.Principal.WindowsBuiltInRole]::Administrator)) {
+    Write-Host "Requesting admin privileges..." -ForegroundColor Yellow
+    Start-Process powershell.exe "-NoProfile -ExecutionPolicy Bypass -File \`"$PSCommandPath\`"" -Verb RunAs
+    exit
+}
+
 Clear-Host
-Write-Host "============================" -ForegroundColor Cyan
-Write-Host "   Kliiq Software Installer" -ForegroundColor Cyan
-Write-Host "============================" -ForegroundColor Cyan
+Write-Host "===========================================" -ForegroundColor Cyan
+Write-Host "        Kliiq Installer Starting..." -ForegroundColor Cyan
+Write-Host "===========================================" -ForegroundColor Cyan
 Write-Host ""
 
 $apps = @(
 ${selectedApps.map(id => `    "${id}"`).join(',\n')}
 )
 
-$successCount = 0
-$failCount = 0
-
 foreach ($app in $apps) {
     Write-Host "Installing $app..." -ForegroundColor Yellow
-    
-    try {
-        # Install using winget with robust error handling
-        # --force prevents some 'already installed' errors from hanging
-        # --disable-interactivity prevents blocking on prompts
-        $installResult = winget install --id $app -e --accept-source-agreements --accept-package-agreements --silent --force --disable-interactivity 2>&1
-        
-        if ($LASTEXITCODE -eq 0) {
-            Write-Host "Successfully installed $app" -ForegroundColor Green
-            $successCount++
-        } else {
-            Write-Host "Failed to install $app (Exit Code: $LASTEXITCODE)" -ForegroundColor Red
-            # Optional: Write detailed error if needed
-            # Write-Host $installResult
-            $failCount++
-        }
-    } catch {
-        Write-Host "Error installing $app : $_" -ForegroundColor Red
-        $failCount++
-    }
+    winget install --id $app -e --accept-source-agreements --accept-package-agreements
     Write-Host ""
 }
 
-Write-Host "============================" -ForegroundColor Cyan
-Write-Host "Installation Summary" -ForegroundColor Cyan
-Write-Host "Installed: $successCount" -ForegroundColor Green
-Write-Host "Failed:    $failCount" -ForegroundColor Red
-Write-Host "============================" -ForegroundColor Cyan
+Write-Host "-------------------------------------------" -ForegroundColor Green
+Write-Host "Installation Process Complete." -ForegroundColor Green
 Write-Host ""
-Write-Host "Press Enter to exit..."
-Read-Host
+Read-Host "Press Enter to exit"
 `
-
         // Create blob and download link
-        try {
-            const blob = new Blob([scriptContent], { type: 'text/plain' })
-            const url = window.URL.createObjectURL(blob)
-            const a = document.createElement('a')
-            a.href = url
-            a.download = 'KliiqInstaller.ps1'
-            document.body.appendChild(a)
-            a.click()
-            document.body.removeChild(a)
-            window.URL.revokeObjectURL(url)
+        const blob = new Blob([scriptContent], { type: 'text/plain' })
+        const url = window.URL.createObjectURL(blob)
+        const a = document.createElement('a')
+        a.href = url
+        a.download = 'KliiqInstaller.ps1'
+        document.body.appendChild(a)
+        a.click()
+        document.body.removeChild(a)
+        window.URL.revokeObjectURL(url)
 
-            setTimeout(() => {
-                setIsGenerating(false)
-                alert(`✅ Kliiq Installer downloaded!\n\nTo install your apps:\n1. Right-click "KliiqInstaller.ps1"\n2. Select "Run with PowerShell"`)
-            }, 1000)
-        } catch (err) {
-            console.error('Download failed:', err)
-            setIsGenerating(false)
-        }
+        setTimeout(() => {
+            setIsGenerating(false);
+            alert(`✅ Kliiq Installer downloaded!\n\nIMPORTANT:\n1. Open your Downloads folder\n2. RIGHT-CLICK KliiqInstaller.ps1\n3. Select "Run with PowerShell"`);
+        }, 1000)
     }
 
     return (
