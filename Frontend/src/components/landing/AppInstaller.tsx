@@ -76,7 +76,7 @@ export function AppInstaller() {
         )
     }
 
-    const generateInstaller = async () => {
+    const generateInstaller = () => {
         setIsGenerating(true)
 
         try {
@@ -84,33 +84,184 @@ export function AppInstaller() {
                 .flatMap(c => c.apps)
                 .filter(a => selectedApps.includes(a.id));
 
-            const response = await fetch('/api/generate-installer', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify({ apps: selectedAppsData }),
-            });
-
-            if (!response.ok) {
-                const errorData = await response.json().catch(() => ({}));
-                throw new Error(errorData.error || `Server error: ${response.status}`);
+            if (selectedAppsData.length === 0) {
+                alert('Please select at least one app to install.');
+                setIsGenerating(false);
+                return;
             }
 
-            const blob = await response.blob();
+            // Generate PowerShell script with Windows Forms GUI
+            const scriptContent = `# Kliiq Installer - GUI Version
+# Generated: ${new Date().toLocaleString()}
+# Apps: ${selectedAppsData.map(a => a.name).join(', ')}
+
+Add-Type -AssemblyName System.Windows.Forms
+Add-Type -AssemblyName System.Drawing
+
+# App data
+$apps = @(
+${selectedAppsData.map(app => `    @{ Name = "${app.name}"; Id = "${app.id}"; Status = "Pending" }`).join('\n')}
+)
+
+# Create main form
+$form = New-Object System.Windows.Forms.Form
+$form.Text = "Kliiq Installer"
+$form.Size = New-Object System.Drawing.Size(600, 500)
+$form.StartPosition = "CenterScreen"
+$form.FormBorderStyle = "FixedDialog"
+$form.MaximizeBox = $false
+$form.BackColor = [System.Drawing.Color]::FromArgb(15, 15, 20)
+
+# Header label
+$headerLabel = New-Object System.Windows.Forms.Label
+$headerLabel.Location = New-Object System.Drawing.Point(20, 20)
+$headerLabel.Size = New-Object System.Drawing.Size(560, 40)
+$headerLabel.Text = "Kliiq Software Installer"
+$headerLabel.Font = New-Object System.Drawing.Font("Segoe UI", 18, [System.Drawing.FontStyle]::Bold)
+$headerLabel.ForeColor = [System.Drawing.Color]::White
+$form.Controls.Add($headerLabel)
+
+# Status label
+$statusLabel = New-Object System.Windows.Forms.Label
+$statusLabel.Location = New-Object System.Drawing.Point(20, 70)
+$statusLabel.Size = New-Object System.Drawing.Size(560, 25)
+$statusLabel.Text = "Installing ${selectedAppsData.length} application(s)..."
+$statusLabel.Font = New-Object System.Drawing.Font("Segoe UI", 11)
+$statusLabel.ForeColor = [System.Drawing.Color]::FromArgb(160, 160, 180)
+$form.Controls.Add($statusLabel)
+
+# Progress bar
+$progressBar = New-Object System.Windows.Forms.ProgressBar
+$progressBar.Location = New-Object System.Drawing.Point(20, 105)
+$progressBar.Size = New-Object System.Drawing.Size(560, 25)
+$progressBar.Maximum = $apps.Count
+$progressBar.Value = 0
+$form.Controls.Add($progressBar)
+
+# App list box
+$listBox = New-Object System.Windows.Forms.ListBox
+$listBox.Location = New-Object System.Drawing.Point(20, 145)
+$listBox.Size = New-Object System.Drawing.Size(560, 250)
+$listBox.Font = New-Object System.Drawing.Font("Consolas", 10)
+$listBox.BackColor = [System.Drawing.Color]::FromArgb(25, 25, 35)
+$listBox.ForeColor = [System.Drawing.Color]::White
+$listBox.BorderStyle = "None"
+$form.Controls.Add($listBox)
+
+# Close button (initially disabled)
+$closeButton = New-Object System.Windows.Forms.Button
+$closeButton.Location = New-Object System.Drawing.Point(480, 410)
+$closeButton.Size = New-Object System.Drawing.Size(100, 35)
+$closeButton.Text = "Close"
+$closeButton.Enabled = $false
+$closeButton.Font = New-Object System.Drawing.Font("Segoe UI", 10)
+$closeButton.Add_Click({ $form.Close() })
+$form.Controls.Add($closeButton)
+
+# Show form
+$form.Show()
+
+# Check winget
+$listBox.Items.Add("Checking for winget...")
+$form.Refresh()
+Start-Sleep -Milliseconds 500
+
+try {
+    $null = Get-Command winget -ErrorAction Stop
+    $listBox.Items.Add("[OK] Winget is available")
+} catch {
+    $listBox.Items.Add("[ERROR] Winget not found!")
+    $listBox.Items.Add("Please install Windows App Installer from Microsoft Store")
+    $statusLabel.Text = "Installation failed"
+    $statusLabel.ForeColor = [System.Drawing.Color]::FromArgb(255, 100, 100)
+    $closeButton.Enabled = $true
+    $form.Refresh()
+    [System.Windows.Forms.Application]::Run($form)
+    exit 1
+}
+
+$listBox.Items.Add("")
+$form.Refresh()
+
+# Install each app
+$successCount = 0
+$failCount = 0
+
+for ($i = 0; $i -lt $apps.Count; $i++) {
+    $app = $apps[$i]
+    $statusLabel.Text = "Installing $($app.Name)... ($($i + 1)/$($apps.Count))"
+    $listBox.Items.Add("[$($i + 1)/$($apps.Count)] Installing $($app.Name)...")
+    $form.Refresh()
+    
+    try {
+        $output = winget install --id $($app.Id) --silent --accept-package-agreements --accept-source-agreements 2>&1
+        
+        if ($LASTEXITCODE -eq 0) {
+            $listBox.Items.Add("    ✓ $($app.Name) installed successfully")
+            $listBox.ForeColor = [System.Drawing.Color]::FromArgb(100, 255, 100)
+            $successCount++
+        } else {
+            $listBox.Items.Add("    ✗ $($app.Name) installation failed")
+            $listBox.ForeColor = [System.Drawing.Color]::FromArgb(255, 100, 100)
+            $failCount++
+        }
+    } catch {
+        $listBox.Items.Add("    ✗ Error: $_")
+        $listBox.ForeColor = [System.Drawing.Color]::FromArgb(255, 100, 100)
+        $failCount++
+    }
+    
+    $progressBar.Value = $i + 1
+    $listBox.Items.Add("")
+    $form.Refresh()
+    Start-Sleep -Milliseconds 300
+}
+
+# Summary
+$listBox.Items.Add("========================================")
+$listBox.Items.Add("Installation Complete!")
+$listBox.Items.Add("========================================")
+$listBox.Items.Add("Successfully installed: $successCount app(s)")
+$listBox.Items.Add("Failed: $failCount app(s)")
+$listBox.Items.Add("")
+$listBox.Items.Add("You can close this window now.")
+
+if ($failCount -eq 0) {
+    $statusLabel.Text = "All applications installed successfully!"
+    $statusLabel.ForeColor = [System.Drawing.Color]::FromArgb(100, 255, 100)
+} else {
+    $statusLabel.Text = "Installation completed with $failCount error(s)"
+    $statusLabel.ForeColor = [System.Drawing.Color]::FromArgb(255, 200, 100)
+}
+
+$closeButton.Enabled = $true
+$form.Refresh()
+
+# Keep form open
+[System.Windows.Forms.Application]::Run($form)
+`;
+
+            // Create blob and download
+            const blob = new Blob([scriptContent], { type: 'text/plain' });
             const url = window.URL.createObjectURL(blob);
             const a = document.createElement('a');
-            a.href = url
-            a.download = 'KliiqInstaller.cmd'
-            document.body.appendChild(a)
-            a.click()
-            document.body.removeChild(a)
-            window.URL.revokeObjectURL(url)
+            a.href = url;
+            a.download = 'KliiqInstaller.ps1';
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            window.URL.revokeObjectURL(url);
+
+            // Show success message
+            setTimeout(() => {
+                alert(`✅ Kliiq Installer downloaded!\n\nTo install your apps:\n1. Right-click KliiqInstaller.ps1\n2. Select "Run with PowerShell"\n3. A GUI window will appear showing installation progress`);
+            }, 500);
+
         } catch (err: any) {
             console.error('Error generating installer:', err);
-            alert(err.message || 'Failed to generate installer. Please try again later.');
+            alert('Failed to generate installer. Please try again.');
         } finally {
-            setIsGenerating(false)
+            setIsGenerating(false);
         }
     }
 
@@ -173,10 +324,10 @@ export function AppInstaller() {
                 >
                     <div className="space-y-4">
                         <h3 className="text-2xl font-bold text-white sm:text-3xl">
-                            2. Deploy Your Custom Stack
+                            2. Download Your Custom Installer
                         </h3>
                         <p className="text-text-secondary max-w-xl mx-auto">
-                            Generate your specialized Kliiq deployment script and manage your entire lifecycle with zero technical friction.
+                            Get a personalized PowerShell script that will install all your selected apps automatically.
                         </p>
                     </div>
 
@@ -194,15 +345,20 @@ export function AppInstaller() {
                         ) : (
                             <>
                                 <Download className="mr-2 h-5 w-5" />
-                                Get Your Kliiq Installer
+                                Download Kliiq Installer {selectedApps.length > 0 && `(${selectedApps.length} apps)`}
                             </>
                         )}
                     </Button>
 
-                    <p className="text-sm text-text-muted flex items-center gap-2">
-                        <Terminal className="w-4 h-4" />
-                        Kliiq works on Windows 11, 10, 8.x, 7, and equivalent Server versions.
-                    </p>
+                    <div className="space-y-2 text-sm text-text-muted">
+                        <p className="flex items-center justify-center gap-2">
+                            <Terminal className="w-4 h-4" />
+                            Right-click the downloaded file and select "Run with PowerShell"
+                        </p>
+                        <p className="text-xs">
+                            Works on Windows 11, 10, 8.x, 7, and Server versions
+                        </p>
+                    </div>
                 </motion.div>
 
             </div>
