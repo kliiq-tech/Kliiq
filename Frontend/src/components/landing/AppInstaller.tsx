@@ -90,139 +90,147 @@ export function AppInstaller() {
                 return;
             }
 
-            // Generate PowerShell script with Windows Forms GUI (base64 encoded to avoid escaping issues)
-            const psScript = `Add-Type -AssemblyName System.Windows.Forms
-Add-Type -AssemblyName System.Drawing
-
-$apps = @(
-${selectedAppsData.map(app => `    @{ Name = "${app.name}"; Id = "${app.id}" }`).join(',\n')}
-)
-
-$form = New-Object System.Windows.Forms.Form
-$form.Text = "Kliiq Installer"
-$form.Size = New-Object System.Drawing.Size(600, 500)
-$form.StartPosition = "CenterScreen"
-$form.FormBorderStyle = "FixedDialog"
-$form.MaximizeBox = $false
-$form.BackColor = [System.Drawing.Color]::FromArgb(15, 15, 20)
-
-$headerLabel = New-Object System.Windows.Forms.Label
-$headerLabel.Location = New-Object System.Drawing.Point(20, 20)
-$headerLabel.Size = New-Object System.Drawing.Size(560, 40)
-$headerLabel.Text = "Kliiq Software Installer"
-$headerLabel.Font = New-Object System.Drawing.Font("Segoe UI", 18, [System.Drawing.FontStyle]::Bold)
-$headerLabel.ForeColor = [System.Drawing.Color]::White
-$form.Controls.Add($headerLabel)
-
-$statusLabel = New-Object System.Windows.Forms.Label
-$statusLabel.Location = New-Object System.Drawing.Point(20, 70)
-$statusLabel.Size = New-Object System.Drawing.Size(560, 25)
-$statusLabel.Text = "Installing ${selectedAppsData.length} application(s)..."
-$statusLabel.Font = New-Object System.Drawing.Font("Segoe UI", 11)
-$statusLabel.ForeColor = [System.Drawing.Color]::FromArgb(160, 160, 180)
-$form.Controls.Add($statusLabel)
-
-$progressBar = New-Object System.Windows.Forms.ProgressBar
-$progressBar.Location = New-Object System.Drawing.Point(20, 105)
-$progressBar.Size = New-Object System.Drawing.Size(560, 25)
-$progressBar.Maximum = $apps.Count
-$form.Controls.Add($progressBar)
-
-$listBox = New-Object System.Windows.Forms.ListBox
-$listBox.Location = New-Object System.Drawing.Point(20, 145)
-$listBox.Size = New-Object System.Drawing.Size(560, 250)
-$listBox.Font = New-Object System.Drawing.Font("Consolas", 10)
-$listBox.BackColor = [System.Drawing.Color]::FromArgb(25, 25, 35)
-$listBox.ForeColor = [System.Drawing.Color]::White
-$listBox.BorderStyle = "None"
-$form.Controls.Add($listBox)
-
-$closeButton = New-Object System.Windows.Forms.Button
-$closeButton.Location = New-Object System.Drawing.Point(480, 410)
-$closeButton.Size = New-Object System.Drawing.Size(100, 35)
-$closeButton.Text = "Close"
-$closeButton.Enabled = $false
-$closeButton.Font = New-Object System.Drawing.Font("Segoe UI", 10)
-$closeButton.Add_Click({ $form.Close() })
-$form.Controls.Add($closeButton)
-
-$form.Show()
-$listBox.Items.Add("Checking for winget...")
-$form.Refresh()
-Start-Sleep -Milliseconds 500
-
-try {
-    $null = Get-Command winget -ErrorAction Stop
-    $listBox.Items.Add("[OK] Winget is available")
-    $listBox.Items.Add("")
-    $form.Refresh()
-} catch {
-    $listBox.Items.Add("[ERROR] Winget not found!")
-    $listBox.Items.Add("Install Windows App Installer from Microsoft Store")
-    $statusLabel.Text = "Installation failed"
-    $statusLabel.ForeColor = [System.Drawing.Color]::FromArgb(255, 100, 100)
-    $closeButton.Enabled = $true
-    $form.Refresh()
-    [System.Windows.Forms.Application]::Run($form)
-    exit
-}
-
-$successCount = 0
-$failCount = 0
-
-for ($i = 0; $i -lt $apps.Count; $i++) {
-    $app = $apps[$i]
-    $statusLabel.Text = "Installing " + $app.Name + "... (" + ($i + 1) + "/" + $apps.Count + ")"
-    $listBox.Items.Add("[" + ($i + 1) + "/" + $apps.Count + "] Installing " + $app.Name + "...")
-    $form.Refresh()
-    
-    try {
-        winget install --id $app.Id --silent --accept-package-agreements --accept-source-agreements | Out-Null
-        
-        if ($LASTEXITCODE -eq 0) {
-            $listBox.Items.Add("    ✓ " + $app.Name + " installed successfully")
-            $successCount++
-        } else {
-            $listBox.Items.Add("    ✗ " + $app.Name + " installation failed")
-            $failCount++
-        }
-    } catch {
-        $listBox.Items.Add("    ✗ Error installing " + $app.Name)
-        $failCount++
-    }
-    
-    $progressBar.Value = $i + 1
-    $listBox.Items.Add("")
-    $form.Refresh()
-}
-
-$listBox.Items.Add("========================================")
-$listBox.Items.Add("Installation Complete!")
-$listBox.Items.Add("========================================")
-$listBox.Items.Add("Successfully installed: " + $successCount + " app(s)")
-$listBox.Items.Add("Failed: " + $failCount + " app(s)")
-
-if ($failCount -eq 0) {
-    $statusLabel.Text = "All applications installed successfully!"
-    $statusLabel.ForeColor = [System.Drawing.Color]::FromArgb(100, 255, 100)
-} else {
-    $statusLabel.Text = "Installation completed with " + $failCount + " error(s)"
-    $statusLabel.ForeColor = [System.Drawing.Color]::FromArgb(255, 200, 100)
-}
-
-$closeButton.Enabled = $true
-$form.Refresh()
-[System.Windows.Forms.Application]::Run($form)`;
-
-            // Encode PowerShell script to base64
-            const psScriptBase64 = btoa(unescape(encodeURIComponent(psScript)));
-
-            // Create batch file that runs PowerShell with bypass
+            // Create batch file that generates and runs PowerShell script
             const batchContent = `@echo off
-:: Kliiq Installer - Generated ${new Date().toLocaleString()}
-:: Apps: ${selectedAppsData.map(a => a.name).join(', ')}
+title Kliiq Installer
+echo Kliiq Installer - Starting...
+echo.
 
-powershell.exe -NoProfile -ExecutionPolicy Bypass -EncodedCommand ${psScriptBase64}
+:: Create PowerShell script in temp folder
+set "PS_SCRIPT=%TEMP%\\KliiqInstaller_%RANDOM%.ps1"
+
+:: Write PowerShell script
+(
+echo Add-Type -AssemblyName System.Windows.Forms
+echo Add-Type -AssemblyName System.Drawing
+echo.
+echo $apps = @^(
+${selectedAppsData.map((app, index) =>
+                `echo     @{ Name = "${app.name}"; Id = "${app.id}" }${index < selectedAppsData.length - 1 ? ',' : ''}`
+            ).join('\n')}
+echo ^)
+echo.
+echo $form = New-Object System.Windows.Forms.Form
+echo $form.Text = "Kliiq Installer"
+echo $form.Size = New-Object System.Drawing.Size^(600, 500^)
+echo $form.StartPosition = "CenterScreen"
+echo $form.FormBorderStyle = "FixedDialog"
+echo $form.MaximizeBox = $false
+echo $form.BackColor = [System.Drawing.Color]::FromArgb^(15, 15, 20^)
+echo.
+echo $headerLabel = New-Object System.Windows.Forms.Label
+echo $headerLabel.Location = New-Object System.Drawing.Point^(20, 20^)
+echo $headerLabel.Size = New-Object System.Drawing.Size^(560, 40^)
+echo $headerLabel.Text = "Kliiq Software Installer"
+echo $headerLabel.Font = New-Object System.Drawing.Font^("Segoe UI", 18, [System.Drawing.FontStyle]::Bold^)
+echo $headerLabel.ForeColor = [System.Drawing.Color]::White
+echo $form.Controls.Add^($headerLabel^)
+echo.
+echo $statusLabel = New-Object System.Windows.Forms.Label
+echo $statusLabel.Location = New-Object System.Drawing.Point^(20, 70^)
+echo $statusLabel.Size = New-Object System.Drawing.Size^(560, 25^)
+echo $statusLabel.Text = "Installing ${selectedAppsData.length} application(s)..."
+echo $statusLabel.Font = New-Object System.Drawing.Font^("Segoe UI", 11^)
+echo $statusLabel.ForeColor = [System.Drawing.Color]::FromArgb^(160, 160, 180^)
+echo $form.Controls.Add^($statusLabel^)
+echo.
+echo $progressBar = New-Object System.Windows.Forms.ProgressBar
+echo $progressBar.Location = New-Object System.Drawing.Point^(20, 105^)
+echo $progressBar.Size = New-Object System.Drawing.Size^(560, 25^)
+echo $progressBar.Maximum = $apps.Count
+echo $form.Controls.Add^($progressBar^)
+echo.
+echo $listBox = New-Object System.Windows.Forms.ListBox
+echo $listBox.Location = New-Object System.Drawing.Point^(20, 145^)
+echo $listBox.Size = New-Object System.Drawing.Size^(560, 250^)
+echo $listBox.Font = New-Object System.Drawing.Font^("Consolas", 10^)
+echo $listBox.BackColor = [System.Drawing.Color]::FromArgb^(25, 25, 35^)
+echo $listBox.ForeColor = [System.Drawing.Color]::White
+echo $listBox.BorderStyle = "None"
+echo $form.Controls.Add^($listBox^)
+echo.
+echo $closeButton = New-Object System.Windows.Forms.Button
+echo $closeButton.Location = New-Object System.Drawing.Point^(480, 410^)
+echo $closeButton.Size = New-Object System.Drawing.Size^(100, 35^)
+echo $closeButton.Text = "Close"
+echo $closeButton.Enabled = $false
+echo $closeButton.Font = New-Object System.Drawing.Font^("Segoe UI", 10^)
+echo $closeButton.Add_Click^({ $form.Close^(^) }^)
+echo $form.Controls.Add^($closeButton^)
+echo.
+echo $form.Show^(^)
+echo $listBox.Items.Add^("Checking for winget..."^)
+echo $form.Refresh^(^)
+echo Start-Sleep -Milliseconds 500
+echo.
+echo try {
+echo     $null = Get-Command winget -ErrorAction Stop
+echo     $listBox.Items.Add^("[OK] Winget is available"^)
+echo     $listBox.Items.Add^(""^)
+echo     $form.Refresh^(^)
+echo } catch {
+echo     $listBox.Items.Add^("[ERROR] Winget not found!"^)
+echo     $listBox.Items.Add^("Install from Microsoft Store"^)
+echo     $statusLabel.Text = "Installation failed"
+echo     $statusLabel.ForeColor = [System.Drawing.Color]::FromArgb^(255, 100, 100^)
+echo     $closeButton.Enabled = $true
+echo     $form.Refresh^(^)
+echo     [System.Windows.Forms.Application]::Run^($form^)
+echo     exit
+echo }
+echo.
+echo $successCount = 0
+echo $failCount = 0
+echo.
+echo for ^($i = 0; $i -lt $apps.Count; $i++^) {
+echo     $app = $apps[$i]
+echo     $statusLabel.Text = "Installing " + $app.Name + "... ^(" + ^($i + 1^) + "/" + $apps.Count + "^)"
+echo     $listBox.Items.Add^("[" + ^($i + 1^) + "/" + $apps.Count + "] Installing " + $app.Name + "..."^)
+echo     $form.Refresh^(^)
+echo     try {
+echo         winget install --id $app.Id --silent --accept-package-agreements --accept-source-agreements ^| Out-Null
+echo         if ^($LASTEXITCODE -eq 0^) {
+echo             $listBox.Items.Add^("    ✓ " + $app.Name + " installed"^)
+echo             $successCount++
+echo         } else {
+echo             $listBox.Items.Add^("    ✗ " + $app.Name + " failed"^)
+echo             $failCount++
+echo         }
+echo     } catch {
+echo         $listBox.Items.Add^("    ✗ Error: " + $app.Name^)
+echo         $failCount++
+echo     }
+echo     $progressBar.Value = $i + 1
+echo     $listBox.Items.Add^(""^)
+echo     $form.Refresh^(^)
+echo }
+echo.
+echo $listBox.Items.Add^("========================================"^)
+echo $listBox.Items.Add^("Installation Complete!"^)
+echo $listBox.Items.Add^("========================================"^)
+echo $listBox.Items.Add^("Successfully installed: " + $successCount + " app(s)"^)
+echo $listBox.Items.Add^("Failed: " + $failCount + " app(s)"^)
+echo.
+echo if ^($failCount -eq 0^) {
+echo     $statusLabel.Text = "All apps installed successfully!"
+echo     $statusLabel.ForeColor = [System.Drawing.Color]::FromArgb^(100, 255, 100^)
+echo } else {
+echo     $statusLabel.Text = "Completed with " + $failCount + " error(s)"
+echo     $statusLabel.ForeColor = [System.Drawing.Color]::FromArgb^(255, 200, 100^)
+echo }
+echo.
+echo $closeButton.Enabled = $true
+echo $form.Refresh^(^)
+echo [System.Windows.Forms.Application]::Run^($form^)
+) > "%PS_SCRIPT%"
+
+:: Run PowerShell script
+echo Starting installer window...
+powershell.exe -NoProfile -ExecutionPolicy Bypass -File "%PS_SCRIPT%"
+
+:: Clean up
+del "%PS_SCRIPT%" 2>nul
+exit
 `;
 
             // Create blob and download as .bat file
@@ -238,7 +246,7 @@ powershell.exe -NoProfile -ExecutionPolicy Bypass -EncodedCommand ${psScriptBase
 
             // Show success message
             setTimeout(() => {
-                alert(`✅ Kliiq Installer downloaded!\n\nTo install your apps:\n1. Double-click KliiqInstaller.bat\n2. A GUI window will appear automatically\n3. Watch your apps install!\n\nNo PowerShell prompts - just double-click and go!`);
+                alert(`✅ Kliiq Installer downloaded!\n\nTo install your apps:\n1. Double-click KliiqInstaller.bat\n2. A GUI window will appear\n3. Watch your apps install!\n\nNote: Windows may show a SmartScreen warning - click "More info" then "Run anyway"`);
             }, 500);
 
         } catch (err: any) {
@@ -329,7 +337,7 @@ powershell.exe -NoProfile -ExecutionPolicy Bypass -EncodedCommand ${psScriptBase
                         ) : (
                             <>
                                 <Download className="mr-2 h-5 w-5" />
-                                Download Kliiq Installer {selectedApps.length > 0 && `(${selectedApps.length} apps)`}
+                                Download Kliiq Installer
                             </>
                         )}
                     </Button>
