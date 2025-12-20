@@ -11,7 +11,7 @@ const categories = [
         apps: [
             { id: "Google.Chrome", name: "Chrome" },
             { id: "Mozilla.Firefox", name: "Firefox" },
-            { id: "Brave.Brave", name: "Brave" },
+            { id: "BraveSoftware.BraveBrowser", name: "Brave" },
             { id: "Microsoft.Edge", name: "Edge" },
         ]
     },
@@ -32,7 +32,7 @@ const categories = [
             { id: "Git.Git", name: "Git" },
             { id: "OpenJS.NodeJS", name: "Node.js" },
             { id: "Docker.DockerDesktop", name: "Docker" },
-            { id: "Cursor.Cursor", name: "Cursor" },
+            { id: "Anysphere.Cursor", name: "Cursor" },
         ]
     },
     {
@@ -80,16 +80,19 @@ export function AppInstaller() {
         setIsGenerating(true)
 
         // Generate PowerShell script (Pure .ps1)
-        // Removed self-elevation to avoid double-prompts. Winget handles elevation if needed.
+        // Includes -Force to silent Execution Policy prompt
         const scriptContent = `# Kliiq Installer Function
 # Generated: ${new Date().toLocaleString()}
+
+# Suppress "Execution Policy Change" prompt and allow running
+try {
+    Set-ExecutionPolicy -Scope Process -ExecutionPolicy Bypass -Force -ErrorAction SilentlyContinue
+} catch {}
 
 Clear-Host
 Write-Host "============================" -ForegroundColor Cyan
 Write-Host "   Kliiq Software Installer" -ForegroundColor Cyan
 Write-Host "============================" -ForegroundColor Cyan
-Write-Host ""
-Write-Host "Note: You may be prompted for Admin permissions during installation." -ForegroundColor Gray
 Write-Host ""
 
 $apps = @(
@@ -148,7 +151,7 @@ Read-Host
 
             setTimeout(() => {
                 setIsGenerating(false)
-                alert(`✅ Kliiq Installer downloaded!\n\nTo install your apps:\n1. Right-click "KliiqInstaller.ps1"\n2. Select "Run with PowerShell"\n3. If prompted with a blue screen, type "A" and press Enter to allow the script.`)
+                alert(`✅ Kliiq Installer downloaded!\n\nTo install your apps:\n1. Right-click "KliiqInstaller.ps1"\n2. Select "Run with PowerShell"`)
             }, 1000)
         } catch (err) {
             console.error('Download failed:', err)
