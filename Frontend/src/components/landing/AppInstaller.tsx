@@ -11,7 +11,7 @@ const categories = [
         apps: [
             { id: "Google.Chrome", name: "Chrome" },
             { id: "Mozilla.Firefox", name: "Firefox" },
-            { id: "BraveSoftware.BraveBrowser", name: "Brave" },
+            { id: "Brave.Brave", name: "Brave" },
             { id: "Microsoft.Edge", name: "Edge" },
         ]
     },
@@ -80,14 +80,8 @@ export function AppInstaller() {
         setIsGenerating(true)
 
         // Generate PowerShell script (Pure .ps1)
-        // Includes -Force to silent Execution Policy prompt
         const scriptContent = `# Kliiq Installer Function
 # Generated: ${new Date().toLocaleString()}
-
-# Suppress "Execution Policy Change" prompt and allow running
-try {
-    Set-ExecutionPolicy -Scope Process -ExecutionPolicy Bypass -Force -ErrorAction SilentlyContinue
-} catch {}
 
 Clear-Host
 Write-Host "============================" -ForegroundColor Cyan
