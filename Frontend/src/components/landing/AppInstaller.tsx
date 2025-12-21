@@ -98,22 +98,12 @@ export function AppInstaller() {
 
         const scriptContent = `<# :
 @echo off
-:: Passing the script path explicitly to avoid issues in the 'iex' context
-powershell -NoProfile -ExecutionPolicy Bypass -Command "$scriptPath='%~f0'; iex ((Get-Content -LiteralPath '%~f0' -Raw))"
+powershell -NoProfile -ExecutionPolicy Bypass -Command "iex ((Get-Content -LiteralPath '%~f0' -Raw))"
 exit /b
 #>
 
 # Kliiq Installer - Hybrid Script
 # Generated: ${new Date().toLocaleString()}
-
-# Check for Admin privileges
-$currentPrincipal = [Security.Principal.WindowsPrincipal][Security.Principal.WindowsIdentity]::GetCurrent()
-if (!$currentPrincipal.IsInRole([Security.Principal.WindowsBuiltInRole]::Administrator)) {
-    Write-Host "Requesting admin privileges..." -ForegroundColor Yellow
-    # Re-launch the batch file as admin to maintain policy bypass, using the explicit scriptPath
-    Start-Process "$env:ComSpec" "/c \`"$scriptPath\`"" -Verb RunAs
-    exit
-}
 
 Clear-Host
 Write-Host "===========================================" -ForegroundColor Cyan
@@ -149,7 +139,7 @@ Read-Host "Press Enter to exit"
 
         setTimeout(() => {
             setIsGenerating(false);
-            alert(`✅ Kliiq Installer downloaded!\n\nTo install your apps:\n1. Open your Downloads folder\n2. DOUBLE-CLICK KliiqInstaller.bat\n3. Click "Run" if Windows warns you\n4. Watch your apps install!`);
+            alert(`✅ Kliiq Installer downloaded!\n\nTo install your apps:\n1. Open your Downloads folder\n2. DOUBLE-CLICK KliiqInstaller.bat\n3. Watch your apps install!`);
         }, 1000)
     }
 
