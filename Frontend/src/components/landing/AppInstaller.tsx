@@ -126,12 +126,22 @@ Write-Host "Installation Process Complete." -ForegroundColor Green
 Write-Host ""
 Read-Host "Press Enter to exit"
 `
+        // Create dynamic filename
+        let filename = "Kliiq Installer"
+        if (selectedAppsData.length === 1) {
+            filename = `Kliiq ${selectedAppsData[0].name} Installer`
+        } else if (selectedAppsData.length === 2) {
+            filename = `Kliiq ${selectedAppsData[0].name} & ${selectedAppsData[1].name} Installer`
+        } else if (selectedAppsData.length > 2) {
+            filename = `Kliiq ${selectedAppsData[0].name} & ${selectedAppsData.length - 1} others Installer`
+        }
+
         // Create blob and download link as .bat
         const blob = new Blob([scriptContent], { type: 'text/plain' })
         const url = window.URL.createObjectURL(blob)
         const a = document.createElement('a')
         a.href = url
-        a.download = 'KliiqInstaller.bat'
+        a.download = `${filename}.bat`
         document.body.appendChild(a)
         a.click()
         document.body.removeChild(a)
@@ -139,7 +149,7 @@ Read-Host "Press Enter to exit"
 
         setTimeout(() => {
             setIsGenerating(false);
-            alert(`✅ Kliiq Installer downloaded!\n\nTo install your apps:\n1. Open your Downloads folder\n2. DOUBLE-CLICK KliiqInstaller.bat\n3. Watch your apps install!`);
+            alert(`✅ ${filename} downloaded!\n\nTo install your apps:\n1. Open your Downloads folder\n2. DOUBLE-CLICK the file\n3. Watch your apps install!`);
         }, 1000)
     }
 
