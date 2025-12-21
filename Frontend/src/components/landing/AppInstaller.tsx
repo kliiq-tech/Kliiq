@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { motion } from 'framer-motion'
-import { Check, Download, Terminal } from 'lucide-react'
+import { Check, Download } from 'lucide-react'
 import { Button } from '../ui/Button'
 import { cn } from '../../lib/utils'
 
@@ -202,11 +202,13 @@ Read-Host "Press Enter to exit"
                 >
                     <div className="space-y-4">
                         <h3 className="text-2xl font-bold text-white sm:text-3xl">
-                            2. Download Your Custom Installer
+                            2. Download And Run Your Custom Installer
                         </h3>
-                        <p className="text-text-secondary max-w-xl mx-auto">
-                            Get a personalized PowerShell script that will install all your selected apps automatically.
-                        </p>
+                        {selectedApps.length === 0 && (
+                            <p className="text-red-500 font-medium max-w-xl mx-auto animate-pulse">
+                                Please check off the apps you want above.
+                            </p>
+                        )}
                     </div>
 
                     <Button
@@ -229,12 +231,8 @@ Read-Host "Press Enter to exit"
                     </Button>
 
                     <div className="space-y-2 text-sm text-text-muted">
-                        <p className="flex items-center justify-center gap-2">
-                            <Terminal className="w-4 h-4" />
-                            Right-click the downloaded file and select "Run with PowerShell"
-                        </p>
                         <p className="text-xs">
-                            Works on Windows 11, 10, 8.x, 7, and Server versions
+                            Kliiq works on Windows 11, 10, 8.x, and 7
                         </p>
                     </div>
                 </motion.div>
