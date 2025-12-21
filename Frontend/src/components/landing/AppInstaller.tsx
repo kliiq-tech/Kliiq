@@ -28,11 +28,11 @@ const categories = [
         name: "Development",
         apps: [
             { id: "Microsoft.VisualStudioCode", name: "VS Code" },
-            { id: "Python.Python.3", name: "Python 3" },
+            { id: "Python.Python.3.12", name: "Python 3.12" },
             { id: "Git.Git", name: "Git" },
             { id: "OpenJS.NodeJS", name: "Node.js" },
             { id: "Docker.DockerDesktop", name: "Docker" },
-            { id: "Cursor.Cursor", name: "Cursor" },
+            { id: "Anysphere.Cursor", name: "Cursor" },
         ]
     },
     {
