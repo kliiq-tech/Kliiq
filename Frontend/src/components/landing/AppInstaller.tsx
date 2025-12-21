@@ -9,57 +9,57 @@ const categories = [
     {
         name: "Web Browsers",
         apps: [
-            { id: "Google.Chrome", name: "Chrome" },
-            { id: "Mozilla.Firefox", name: "Firefox" },
-            { id: "Brave.Brave", name: "Brave" },
-            { id: "Microsoft.Edge", name: "Edge" },
+            { id: "Google.Chrome", name: "Chrome", icon: "https://www.google.com/s2/favicons?domain=chrome.com&sz=128" },
+            { id: "Mozilla.Firefox", name: "Firefox", icon: "https://www.google.com/s2/favicons?domain=mozilla.org&sz=128" },
+            { id: "Brave.Brave", name: "Brave", icon: "https://www.google.com/s2/favicons?domain=brave.com&sz=128" },
+            { id: "Microsoft.Edge", name: "Edge", icon: "https://www.google.com/s2/favicons?domain=microsoftedge.com&sz=128" },
         ]
     },
     {
         name: "Messaging",
         apps: [
-            { id: "Discord.Discord", name: "Discord" },
-            { id: "SlackTechnologies.Slack", name: "Slack" },
-            { id: "Zoom.Zoom", name: "Zoom" },
-            { id: "Microsoft.Teams", name: "Teams" },
+            { id: "Discord.Discord", name: "Discord", icon: "https://www.google.com/s2/favicons?domain=discord.com&sz=128" },
+            { id: "SlackTechnologies.Slack", name: "Slack", icon: "https://www.google.com/s2/favicons?domain=slack.com&sz=128" },
+            { id: "Zoom.Zoom", name: "Zoom", icon: "https://www.google.com/s2/favicons?domain=zoom.us&sz=128" },
+            { id: "Microsoft.Teams", name: "Teams", icon: "https://www.google.com/s2/favicons?domain=teams.microsoft.com&sz=128" },
         ]
     },
     {
         name: "Development",
         apps: [
-            { id: "Microsoft.VisualStudioCode", name: "VS Code" },
-            { id: "Python.Python.3.12", name: "Python 3.12" },
-            { id: "Git.Git", name: "Git" },
-            { id: "OpenJS.NodeJS", name: "Node.js" },
-            { id: "Docker.DockerDesktop", name: "Docker" },
-            { id: "Anysphere.Cursor", name: "Cursor" },
+            { id: "Microsoft.VisualStudioCode", name: "VS Code", icon: "https://www.google.com/s2/favicons?domain=code.visualstudio.com&sz=128" },
+            { id: "Python.Python.3.12", name: "Python 3.12", icon: "https://www.google.com/s2/favicons?domain=python.org&sz=128" },
+            { id: "Git.Git", name: "Git", icon: "https://www.google.com/s2/favicons?domain=git-scm.com&sz=128" },
+            { id: "OpenJS.NodeJS", name: "Node.js", icon: "https://www.google.com/s2/favicons?domain=nodejs.org&sz=128" },
+            { id: "Docker.DockerDesktop", name: "Docker", icon: "https://www.google.com/s2/favicons?domain=docker.com&sz=128" },
+            { id: "Anysphere.Cursor", name: "Cursor", icon: "https://www.google.com/s2/favicons?domain=cursor.com&sz=128" },
         ]
     },
     {
         name: "Media",
         apps: [
-            { id: "VideoLAN.VLC", name: "VLC" },
-            { id: "Spotify.Spotify", name: "Spotify" },
-            { id: "OBSProject.OBSStudio", name: "OBS Studio" },
-            { id: "Audacity.Audacity", name: "Audacity" },
+            { id: "VideoLAN.VLC", name: "VLC", icon: "https://www.google.com/s2/favicons?domain=videolan.org&sz=128" },
+            { id: "Spotify.Spotify", name: "Spotify", icon: "https://www.google.com/s2/favicons?domain=spotify.com&sz=128" },
+            { id: "OBSProject.OBSStudio", name: "OBS Studio", icon: "https://www.google.com/s2/favicons?domain=obsproject.com&sz=128" },
+            { id: "Audacity.Audacity", name: "Audacity", icon: "https://www.google.com/s2/favicons?domain=audacityteam.org&sz=128" },
         ]
     },
     {
         name: "Utilities",
         apps: [
-            { id: "7zip.7zip", name: "7-Zip" },
-            { id: "AntibodySoftware.WizTree", name: "WizTree" },
-            { id: "AnyDeskSoftwareGmbH.AnyDesk", name: "AnyDesk" },
-            { id: "Piriform.CCleaner", name: "CCleaner" },
+            { id: "7zip.7zip", name: "7-Zip", icon: "https://www.google.com/s2/favicons?domain=7-zip.org&sz=128" },
+            { id: "AntibodySoftware.WizTree", name: "WizTree", icon: "https://www.google.com/s2/favicons?domain=diskanalyzer.com&sz=128" },
+            { id: "AnyDeskSoftwareGmbH.AnyDesk", name: "AnyDesk", icon: "https://www.google.com/s2/favicons?domain=anydesk.com&sz=128" },
+            { id: "Piriform.CCleaner", name: "CCleaner", icon: "https://www.google.com/s2/favicons?domain=ccleaner.com&sz=128" },
         ]
     },
     {
         name: "Imaging",
         apps: [
-            { id: "GIMP.GIMP", name: "GIMP" },
-            { id: "BlenderFoundation.Blender", name: "Blender" },
-            { id: "KDE.Krita", name: "Krita" },
-            { id: "Figma.Figma", name: "Figma" },
+            { id: "GIMP.GIMP", name: "GIMP", icon: "https://www.google.com/s2/favicons?domain=gimp.org&sz=128" },
+            { id: "BlenderFoundation.Blender", name: "Blender", icon: "https://www.google.com/s2/favicons?domain=blender.org&sz=128" },
+            { id: "KDE.Krita", name: "Krita", icon: "https://www.google.com/s2/favicons?domain=krita.org&sz=128" },
+            { id: "Figma.Figma", name: "Figma", icon: "https://www.google.com/s2/favicons?domain=figma.com&sz=128" },
         ]
     }
 ]
@@ -181,7 +181,7 @@ Read-Host "Press Enter to exit"
                                     <div
                                         key={app.id}
                                         onClick={() => toggleApp(app.id)}
-                                        className="flex items-center space-x-3 cursor-pointer group select-none"
+                                        className="flex items-center space-x-3 cursor-pointer group select-none py-1"
                                     >
                                         <div className={cn(
                                             "w-5 h-5 rounded border border-white/20 flex items-center justify-center transition-all duration-200 flex-shrink-0",
@@ -191,12 +191,29 @@ Read-Host "Press Enter to exit"
                                         )}>
                                             {selectedApps.includes(app.id) && <Check className="w-3.5 h-3.5 stroke-[3]" />}
                                         </div>
-                                        <span className={cn(
-                                            "text-sm transition-colors",
-                                            selectedApps.includes(app.id) ? "text-white font-medium" : "text-text-muted group-hover:text-text-secondary"
-                                        )}>
-                                            {app.name}
-                                        </span>
+                                        <div className="flex items-center gap-2">
+                                            {app.icon && (
+                                                <img
+                                                    src={app.icon}
+                                                    alt={app.name}
+                                                    className={cn(
+                                                        "w-5 h-5 object-contain rounded-sm transition-all duration-200",
+                                                        selectedApps.includes(app.id)
+                                                            ? "grayscale-0 opacity-100"
+                                                            : "grayscale opacity-50 group-hover:grayscale-0 group-hover:opacity-100"
+                                                    )}
+                                                    onError={(e) => {
+                                                        (e.target as HTMLImageElement).style.display = 'none';
+                                                    }}
+                                                />
+                                            )}
+                                            <span className={cn(
+                                                "text-sm transition-colors",
+                                                selectedApps.includes(app.id) ? "text-white font-medium" : "text-text-muted group-hover:text-text-secondary"
+                                            )}>
+                                                {app.name}
+                                            </span>
+                                        </div>
                                     </div>
                                 ))}
                             </div>
