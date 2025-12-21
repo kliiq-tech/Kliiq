@@ -137,24 +137,39 @@ export function Hero() {
 
                     <div className="flex flex-wrap items-center justify-center md:justify-end gap-x-12 gap-y-8 grayscale opacity-30 hover:grayscale-0 hover:opacity-100 transition-all duration-700">
                         {/* Croovr Logo */}
-                        <div className="flex items-center gap-2">
+                        <a
+                            href="https://croovr-frontend.vercel.app"
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="flex items-center gap-2 hover:scale-105 transition-transform duration-200"
+                        >
                             <img src={croovrLogo} alt="Croovr" className="h-4 w-auto" />
                             <span className="text-base font-bold text-white tracking-tight">Croovr</span>
-                        </div>
+                        </a>
 
                         {/* BORT Logo */}
-                        <div className="flex items-center gap-2">
+                        <a
+                            href="https://bortai.vercel.app"
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="flex items-center gap-2 hover:scale-105 transition-transform duration-200"
+                        >
                             <div className="w-5 h-5 rounded bg-white flex items-center justify-center">
                                 <span className="text-black font-black text-[10px]">B</span>
                             </div>
                             <span className="text-base font-black text-white tracking-tighter">BORT</span>
-                        </div>
+                        </a>
 
                         {/* Creotly Logo */}
-                        <div className="flex items-center gap-2">
+                        <a
+                            href="https://creotly-web.vercel.app"
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="flex items-center gap-2 hover:scale-105 transition-transform duration-200"
+                        >
                             <img src={creotlyLogo} alt="Creotly" className="h-4 w-auto" />
                             <span className="text-base font-semibold text-white tracking-tight">Creotly</span>
-                        </div>
+                        </a>
                     </div>
                 </motion.div>
             </motion.div>
