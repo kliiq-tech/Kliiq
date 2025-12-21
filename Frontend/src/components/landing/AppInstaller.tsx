@@ -232,7 +232,7 @@ Read-Host "Press Enter to exit"
                             2. Download And Run Your Custom Installer
                         </h3>
                         {selectedApps.length === 0 && (
-                            <p className="text-red-500 font-medium max-w-xl mx-auto animate-pulse">
+                            <p className="text-red-500 font-medium max-w-xl mx-auto">
                                 Please check off the apps you want above.
                             </p>
                         )}
