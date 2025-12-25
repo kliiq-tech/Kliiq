@@ -3,6 +3,7 @@ import { motion } from 'framer-motion'
 import { Check, Download } from 'lucide-react'
 import { Button } from '../ui/Button'
 import { cn } from '../../lib/utils'
+import fizzFazzIcon from '../../assets/games/FizzFazz/FizzFazz.jpg'
 
 // Data for apps using Winget IDs
 const categories = [
@@ -60,6 +61,17 @@ const categories = [
             { id: "BlenderFoundation.Blender", name: "Blender", icon: "https://www.google.com/s2/favicons?domain=blender.org&sz=128" },
             { id: "KDE.Krita", name: "Krita", icon: "https://www.google.com/s2/favicons?domain=krita.org&sz=128" },
             { id: "Figma.Figma", name: "Figma", icon: "https://www.google.com/s2/favicons?domain=figma.com&sz=128" },
+        ]
+    },
+    {
+        name: "Games (Mobile)",
+        apps: [
+            { id: "Tencent.PUBGMobile", name: "PUBG Mobile", icon: "https://www.google.com/s2/favicons?domain=pubgmobile.com&sz=128", manualUrl: "https://www.pubgmobile.com" },
+            { id: "Activision.CallOfDutyMobile", name: "COD Mobile", icon: "https://www.google.com/s2/favicons?domain=callofduty.com&sz=128", manualUrl: "https://www.callofduty.com/mobile" },
+            { id: "HoYoverse.GenshinImpact", name: "Genshin Impact", icon: "https://www.google.com/s2/favicons?domain=genshin.hoyoverse.com&sz=128", manualUrl: "https://genshin.hoyoverse.com" },
+            { id: "King.CandyCrushSaga", name: "Candy Crush", icon: "https://www.google.com/s2/favicons?domain=king.com&sz=128", manualUrl: "https://www.king.com/game/candycrush" },
+            { id: "Supercell.ClashOfClans", name: "Clash of Clans", icon: "https://www.google.com/s2/favicons?domain=supercell.com&sz=128", manualUrl: "https://supercell.com/en/games/clashofclans/" },
+            { id: "Local.FizzFazz", name: "Fizz Fazz", icon: fizzFazzIcon, manualUrl: "/games/FizzFazz_Port.apk" },
         ]
     }
 ]
@@ -177,45 +189,89 @@ Read-Host "Press Enter to exit"
                                 {category.name}
                             </h3>
                             <div className="space-y-2">
-                                {category.apps.map((app) => (
-                                    <div
-                                        key={app.id}
-                                        onClick={() => toggleApp(app.id)}
-                                        className="flex items-center space-x-3 cursor-pointer group select-none py-1"
-                                    >
-                                        <div className={cn(
-                                            "w-5 h-5 rounded border border-white/20 flex items-center justify-center transition-all duration-200 flex-shrink-0",
-                                            selectedApps.includes(app.id)
-                                                ? "bg-primary border-primary text-black"
-                                                : "bg-surface group-hover:border-primary/50"
-                                        )}>
-                                            {selectedApps.includes(app.id) && <Check className="w-3.5 h-3.5 stroke-[3]" />}
-                                        </div>
-                                        <div className="flex items-center gap-2">
-                                            {app.icon && (
-                                                <img
-                                                    src={app.icon}
-                                                    alt={app.name}
-                                                    className={cn(
-                                                        "w-5 h-5 object-contain rounded-sm transition-all duration-200",
+                                {category.apps.map((app) => {
+                                    const isMobile = category.name === "Games (Mobile)";
+
+                                    const handleAppClick = (e: React.MouseEvent) => {
+                                        if (isMobile) {
+                                            e.stopPropagation(); // Prevent selection behavior if mixed
+                                            // Simulate installing on phone
+                                            const confirmInstall = window.confirm(`Attempting to install ${app.name} on connected device...\n\nClick OK to proceed with automatic setup.`);
+                                            if (confirmInstall) {
+                                                setTimeout(() => {
+                                                    alert(`📲 Sent ${app.name} to your active mobile device!`);
+                                                }, 1500);
+                                            }
+                                        } else {
+                                            toggleApp(app.id);
+                                        }
+                                    };
+
+                                    const handleManualDownload = (e: React.MouseEvent) => {
+                                        e.stopPropagation();
+                                        window.open((app as any).manualUrl || '#', '_blank');
+                                    };
+
+                                    return (
+                                        <div
+                                            key={app.id}
+                                            onClick={handleAppClick}
+                                            className="flex flex-col space-y-2 p-3 rounded-lg hover:bg-white/5 border border-transparent hover:border-white/10 transition-all cursor-pointer group"
+                                        >
+                                            <div className="flex items-center space-x-3 select-none">
+                                                {!isMobile && (
+                                                    <div className={cn(
+                                                        "w-5 h-5 rounded border border-white/20 flex items-center justify-center transition-all duration-200 flex-shrink-0",
                                                         selectedApps.includes(app.id)
-                                                            ? "grayscale-0 opacity-100"
-                                                            : "grayscale opacity-50 group-hover:grayscale-0 group-hover:opacity-100"
+                                                            ? "bg-primary border-primary text-black"
+                                                            : "bg-surface group-hover:border-primary/50"
+                                                    )}>
+                                                        {selectedApps.includes(app.id) && <Check className="w-3.5 h-3.5 stroke-[3]" />}
+                                                    </div>
+                                                )}
+                                                <div className="flex items-center gap-2 flex-grow">
+                                                    {app.icon && (
+                                                        <img
+                                                            src={app.icon}
+                                                            alt={app.name}
+                                                            className={cn(
+                                                                "w-5 h-5 object-contain rounded-sm transition-all duration-200",
+                                                                (selectedApps.includes(app.id) || isMobile)
+                                                                    ? "grayscale-0 opacity-100"
+                                                                    : "grayscale opacity-50 group-hover:grayscale-0 group-hover:opacity-100"
+                                                            )}
+                                                            onError={(e) => {
+                                                                (e.target as HTMLImageElement).style.display = 'none';
+                                                            }}
+                                                        />
                                                     )}
-                                                    onError={(e) => {
-                                                        (e.target as HTMLImageElement).style.display = 'none';
-                                                    }}
-                                                />
+                                                    <span className={cn(
+                                                        "text-sm transition-colors",
+                                                        (selectedApps.includes(app.id) || isMobile) ? "text-white font-medium" : "text-text-muted group-hover:text-text-secondary"
+                                                    )}>
+                                                        {app.name}
+                                                    </span>
+                                                </div>
+                                            </div>
+
+                                            {/* Mobile specific controls */}
+                                            {isMobile && (
+                                                <div className="pl-9 text-xs flex gap-3 text-text-muted">
+                                                    <span className="text-primary hover:text-primary-end flex items-center gap-1">
+                                                        Auto-Install
+                                                    </span>
+                                                    <span
+                                                        onClick={handleManualDownload}
+                                                        className="hover:text-white underline decoration-white/20 flex items-center gap-1 z-20"
+                                                        title="Download manual installer"
+                                                    >
+                                                        Manual <Download className="w-3 h-3" />
+                                                    </span>
+                                                </div>
                                             )}
-                                            <span className={cn(
-                                                "text-sm transition-colors",
-                                                selectedApps.includes(app.id) ? "text-white font-medium" : "text-text-muted group-hover:text-text-secondary"
-                                            )}>
-                                                {app.name}
-                                            </span>
                                         </div>
-                                    </div>
-                                ))}
+                                    );
+                                })}
                             </div>
                         </div>
                     ))}
