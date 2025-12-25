@@ -66,11 +66,6 @@ const categories = [
     {
         name: "Games (Mobile)",
         apps: [
-            { id: "Tencent.PUBGMobile", name: "PUBG Mobile", icon: "https://www.google.com/s2/favicons?domain=pubgmobile.com&sz=128", manualUrl: "https://www.pubgmobile.com" },
-            { id: "Activision.CallOfDutyMobile", name: "COD Mobile", icon: "https://www.google.com/s2/favicons?domain=callofduty.com&sz=128", manualUrl: "https://www.callofduty.com/mobile" },
-            { id: "HoYoverse.GenshinImpact", name: "Genshin Impact", icon: "https://www.google.com/s2/favicons?domain=genshin.hoyoverse.com&sz=128", manualUrl: "https://genshin.hoyoverse.com" },
-            { id: "King.CandyCrushSaga", name: "Candy Crush", icon: "https://www.google.com/s2/favicons?domain=king.com&sz=128", manualUrl: "https://www.king.com/game/candycrush" },
-            { id: "Supercell.ClashOfClans", name: "Clash of Clans", icon: "https://www.google.com/s2/favicons?domain=supercell.com&sz=128", manualUrl: "https://supercell.com/en/games/clashofclans/" },
             { id: "Local.FizzFazz", name: "Fizz Fazz", icon: fizzFazzIcon, manualUrl: "/games/FizzFazz_Port.apk" },
         ]
     }
@@ -194,22 +189,19 @@ Read-Host "Press Enter to exit"
 
                                     const handleAppClick = (e: React.MouseEvent) => {
                                         if (isMobile) {
-                                            e.stopPropagation(); // Prevent selection behavior if mixed
-                                            // Simulate installing on phone
-                                            const confirmInstall = window.confirm(`Attempting to install ${app.name} on connected device...\n\nClick OK to proceed with automatic setup.`);
-                                            if (confirmInstall) {
-                                                setTimeout(() => {
-                                                    alert(`📲 Sent ${app.name} to your active mobile device!`);
-                                                }, 1500);
-                                            }
+                                            e.stopPropagation();
+                                            const url = (app as any).manualUrl || '#';
+
+                                            // Create temporary link to force download
+                                            const link = document.createElement('a');
+                                            link.href = url;
+                                            link.download = app.name + '.apk';
+                                            document.body.appendChild(link);
+                                            link.click();
+                                            document.body.removeChild(link);
                                         } else {
                                             toggleApp(app.id);
                                         }
-                                    };
-
-                                    const handleManualDownload = (e: React.MouseEvent) => {
-                                        e.stopPropagation();
-                                        window.open((app as any).manualUrl || '#', '_blank');
                                     };
 
                                     return (
@@ -253,22 +245,6 @@ Read-Host "Press Enter to exit"
                                                     </span>
                                                 </div>
                                             </div>
-
-                                            {/* Mobile specific controls */}
-                                            {isMobile && (
-                                                <div className="pl-9 text-xs flex gap-3 text-text-muted">
-                                                    <span className="text-primary hover:text-primary-end flex items-center gap-1">
-                                                        Auto-Install
-                                                    </span>
-                                                    <span
-                                                        onClick={handleManualDownload}
-                                                        className="hover:text-white underline decoration-white/20 flex items-center gap-1 z-20"
-                                                        title="Download manual installer"
-                                                    >
-                                                        Manual <Download className="w-3 h-3" />
-                                                    </span>
-                                                </div>
-                                            )}
                                         </div>
                                     );
                                 })}
