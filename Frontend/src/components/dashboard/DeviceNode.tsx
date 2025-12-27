@@ -49,8 +49,6 @@ export function DeviceNode({ name, os, status, specs, peripherals = [], position
             onMouseLeave={() => setIsHovered(false)}
             onClick={onClick}
         >
-            {/* Connection Lines (Removed floating logic for better organization) */}
-
             {/* Main Node Card */}
             <div className={cn(
                 "w-48 bg-white dark:bg-background border border-gray-200 dark:border-white/10 rounded-lg p-3 relative z-10 transition-all duration-300 shadow-sm dark:shadow-none",
@@ -79,7 +77,7 @@ export function DeviceNode({ name, os, status, specs, peripherals = [], position
                     </div>
                 </div>
 
-                {/* Peripherals List (Now internal to prevent overlap) */}
+                {/* Peripherals List */}
                 {peripherals.length > 0 && (
                     <div className="pt-2 border-t border-gray-100 dark:border-white/5 space-y-1.5">
                         {peripherals.map((p, i) => (

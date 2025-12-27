@@ -66,9 +66,9 @@ export function Hero() {
                 <motion.div
                     animate={{ y: [0, -8, 0] }}
                     transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }}
-                    className="absolute left-0 lg:left-0 top-1/4 z-20 hidden lg:block"
+                    className="absolute left-[-2rem] 2xl:left-[-4rem] top-1/4 z-20 hidden xl:block"
                 >
-                    <div className="glass-card p-4 rounded-xl shadow-2xl flex items-center gap-4 transform -rotate-1 hover:rotate-0 transition-all duration-500 border-l-2 border-l-green-500">
+                    <div className="glass-card p-3 rounded-xl shadow-2xl flex items-center gap-3 transform -rotate-1 hover:rotate-0 transition-all duration-500 border-l-2 border-l-green-500 scale-90 2xl:scale-100">
                         <div className="w-10 h-10 rounded-full bg-green-500/10 flex items-center justify-center text-green-400">
                             <Check className="w-5 h-5" />
                         </div>
@@ -82,15 +82,15 @@ export function Hero() {
                 <motion.div
                     animate={{ y: [0, 8, 0] }}
                     transition={{ duration: 5, repeat: Infinity, ease: "easeInOut", delay: 1 }}
-                    className="absolute right-0 lg:right-0 top-1/3 z-20 hidden lg:block"
+                    className="absolute right-[-2rem] 2xl:right-[-4rem] top-1/3 z-20 hidden xl:block"
                 >
-                    <div className="glass-card p-4 rounded-xl shadow-2xl flex items-center gap-4 transform rotate-1 hover:rotate-0 transition-all duration-500 border-r-2 border-r-blue-500">
+                    <div className="glass-card p-3 rounded-xl shadow-2xl flex items-center gap-3 transform rotate-1 hover:rotate-0 transition-all duration-500 border-r-2 border-r-blue-500 scale-90 2xl:scale-100">
                         <div className="w-10 h-10 rounded-full bg-blue-500/10 flex items-center justify-center text-blue-400">
                             <ArrowRight className="w-5 h-5 rotate-90" />
                         </div>
                         <div>
                             <div className="text-xs font-mono text-text-muted uppercase tracking-widest mb-1">lifecycle</div>
-                            <div className="text-sm font-semibold text-white">VS Code Updated</div>
+                            <div className="text-sm font-semibold text-white whitespace-nowrap">VS Code Updated</div>
                             <div className="text-[10px] font-mono text-blue-400/70">PATCH v1.85.1 SUCCESS</div>
                         </div>
                     </div>

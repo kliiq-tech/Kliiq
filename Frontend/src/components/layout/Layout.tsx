@@ -8,7 +8,7 @@ export function Layout() {
     useScrollToHash()
 
     return (
-        <div className="min-h-screen flex flex-col bg-background text-text-primary antialiased selection:bg-primary/20 selection:text-primary">
+        <div className="dark min-h-screen flex flex-col bg-background text-text-primary antialiased selection:bg-primary/20 selection:text-primary">
             <Navbar />
             <main className="flex-grow">
                 <Outlet />

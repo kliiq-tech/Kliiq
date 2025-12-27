@@ -68,23 +68,8 @@ export function AppInstaller() {
                             </h3>
                             <div className="space-y-2">
                                 {category.apps.map((app) => {
-                                    const isMobile = category.name === "Games (Mobile)";
-
-                                    const handleAppClick = (e: React.MouseEvent) => {
-                                        if (isMobile) {
-                                            e.stopPropagation();
-                                            const url = (app as any).manualUrl || '#';
-
-                                            // Create temporary link to force download
-                                            const link = document.createElement('a');
-                                            link.href = url;
-                                            link.download = app.name + '.apk';
-                                            document.body.appendChild(link);
-                                            link.click();
-                                            document.body.removeChild(link);
-                                        } else {
-                                            toggleApp(app.id);
-                                        }
+                                    const handleAppClick = () => {
+                                        toggleApp(app.id);
                                     };
 
                                     return (
@@ -94,23 +79,21 @@ export function AppInstaller() {
                                             className="flex flex-col space-y-2 p-3 rounded-lg hover:bg-white/5 border border-transparent hover:border-white/10 transition-all cursor-pointer group"
                                         >
                                             <div className="flex items-center space-x-3 select-none">
-                                                {!isMobile && (
-                                                    <div className={cn(
-                                                        "w-5 h-5 rounded border border-white/20 flex items-center justify-center transition-all duration-200 flex-shrink-0",
-                                                        selectedApps.includes(app.id)
-                                                            ? "bg-primary border-primary text-black"
-                                                            : "bg-surface group-hover:border-primary/50"
-                                                    )}>
-                                                        {selectedApps.includes(app.id) && <Check className="w-3.5 h-3.5 stroke-[3]" />}
-                                                    </div>
-                                                )}
+                                                <div className={cn(
+                                                    "w-5 h-5 rounded border border-white/20 flex items-center justify-center transition-all duration-200 flex-shrink-0",
+                                                    selectedApps.includes(app.id)
+                                                        ? "bg-primary border-primary text-black"
+                                                        : "bg-surface group-hover:border-primary/50"
+                                                )}>
+                                                    {selectedApps.includes(app.id) && <Check className="w-3.5 h-3.5 stroke-[3]" />}
+                                                </div>
                                                 <div className="flex items-center gap-2 flex-grow">
                                                     <img
-                                                        src={isMobile ? (app as any).icon : `https://www.google.com/s2/favicons?domain=${app.domain}&sz=128`}
+                                                        src={`https://www.google.com/s2/favicons?domain=${app.domain}&sz=128`}
                                                         alt={app.name}
                                                         className={cn(
                                                             "w-5 h-5 object-contain rounded-sm transition-all duration-200",
-                                                            (selectedApps.includes(app.id) || isMobile)
+                                                            selectedApps.includes(app.id)
                                                                 ? "grayscale-0 opacity-100"
                                                                 : "grayscale opacity-50 group-hover:grayscale-0 group-hover:opacity-100"
                                                         )}
@@ -125,7 +108,7 @@ export function AppInstaller() {
                                                     />
                                                     <span className={cn(
                                                         "text-sm transition-colors",
-                                                        (selectedApps.includes(app.id) || isMobile) ? "text-white font-medium" : "text-text-muted group-hover:text-text-secondary"
+                                                        selectedApps.includes(app.id) ? "text-white font-medium" : "text-text-muted group-hover:text-text-secondary"
                                                     )}>
                                                         {app.name}
                                                     </span>

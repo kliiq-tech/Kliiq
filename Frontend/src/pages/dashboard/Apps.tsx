@@ -24,7 +24,7 @@ interface Pack {
 const categories = APP_CATEGORIES.map(cat => ({
     name: cat,
     apps: ALL_APPS.filter(app => app.category === cat)
-})).filter(cat => cat.apps.length > 0 && cat.name !== "Games (Mobile)");
+})).filter(cat => cat.apps.length > 0);
 
 const allApps = ALL_APPS;
 
@@ -222,13 +222,15 @@ export function DashboardApps() {
                                             className="w-9 h-9 object-contain"
                                         />
                                     </div>
-                                    <div className="flex-1 pt-1">
-                                        <div className="font-bold text-gray-900 dark:text-white group-hover:text-primary transition-colors">{app.name}</div>
-                                        <div className="text-[10px] font-bold text-gray-400 dark:text-text-muted uppercase tracking-wider mb-2">{(app as any).version || 'v1.0'} • {(app as any).size || '0 MB'}</div>
+                                    <div className="flex-1 flex flex-col md:flex-row md:items-center justify-between gap-4">
+                                        <div>
+                                            <div className="font-bold text-gray-900 dark:text-white group-hover:text-primary transition-colors">{app.name}</div>
+                                            <div className="text-[10px] font-bold text-gray-400 dark:text-text-muted uppercase tracking-wider mb-2">{(app as any).version || 'v1.0'} • {(app as any).size || '0 MB'}</div>
+                                        </div>
 
-                                        <div className="flex flex-col gap-2 absolute right-5 top-5 z-10 md:static md:mt-4 md:flex-row md:justify-end">
+                                        <div className="flex flex-wrap items-center gap-2">
                                             {appStatus[app.id] === 'installed' ? (
-                                                <div className="flex items-center gap-2">
+                                                <>
                                                     <Button disabled className="h-8 bg-green-500/10 text-green-500 border-green-500/20 text-[10px] font-bold gap-2 px-3">
                                                         <Check className="w-3 h-3" />
                                                         Installed
@@ -242,37 +244,40 @@ export function DashboardApps() {
                                                         <Trash className="w-3 h-3" />
                                                         Uninstall
                                                     </Button>
+                                                </>
+                                            ) : appStatus[app.id] === 'installing' ? (
+                                                <div className="flex items-center gap-2">
+                                                    <div className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-primary/10 text-primary text-[10px] font-bold">
+                                                        <DownloadCloud className="w-3 h-3 animate-bounce" />
+                                                        Installing...
+                                                    </div>
                                                     <Button
-                                                        variant="ghost"
                                                         size="sm"
-                                                        className="h-8 text-[10px] font-bold gap-2 text-primary hover:bg-primary/5"
-                                                        onClick={() => addAppToPack(app.id)}
+                                                        className="h-8 bg-primary text-white text-[10px] font-bold"
+                                                        onClick={() => setAppStatus(prev => ({ ...prev, [app.id]: 'installed' }))}
                                                     >
-                                                        <Plus className="w-3 h-3" />
-                                                        Add to Pack
+                                                        Finish Installation
                                                     </Button>
                                                 </div>
                                             ) : (
-                                                <div className="flex items-center gap-2">
-                                                    <Button
-                                                        className="h-8 text-[10px] font-bold gap-2 px-4 whitespace-nowrap"
-                                                        onClick={() => handleInstall(app.id)}
-                                                        disabled={appStatus[app.id] === 'installing'}
-                                                    >
-                                                        <DownloadCloud className={cn("w-3 h-3", appStatus[app.id] === 'installing' && "animate-bounce")} />
-                                                        {appStatus[app.id] === 'installing' ? "Installing..." : "Install"}
-                                                    </Button>
-                                                    <Button
-                                                        variant="ghost"
-                                                        size="sm"
-                                                        className="h-8 text-[10px] font-bold gap-2 text-gray-400 hover:text-gray-900 dark:hover:text-white"
-                                                        onClick={() => addAppToPack(app.id)}
-                                                    >
-                                                        <Plus className="w-3 h-3" />
-                                                        Add to Pack
-                                                    </Button>
-                                                </div>
+                                                <Button
+                                                    className="h-8 text-[10px] font-bold gap-2 px-4 whitespace-nowrap"
+                                                    onClick={() => handleInstall(app.id)}
+                                                >
+                                                    <DownloadCloud className="w-3 h-3" />
+                                                    Install
+                                                </Button>
                                             )}
+
+                                            <Button
+                                                variant="ghost"
+                                                size="sm"
+                                                className="h-8 text-[10px] font-bold gap-2 text-gray-400 hover:text-gray-900 dark:hover:text-white"
+                                                onClick={() => addAppToPack(app.id)}
+                                            >
+                                                <Plus className="w-3 h-3" />
+                                                Add to Pack
+                                            </Button>
                                         </div>
                                     </div>
                                 </div>

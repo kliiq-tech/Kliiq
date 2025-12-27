@@ -13,11 +13,11 @@ export function Navbar() {
                     Kliiq
                 </Link>
 
-                <div className="hidden md:flex items-center space-x-8">
-                    <Link to="/#faq" className="text-sm font-medium text-text-secondary hover:text-white transition-colors">FAQs</Link>
-                    <Link to="/docs" className="text-sm font-medium text-text-secondary hover:text-white transition-colors">Documentation</Link>
-                    <Link to="/pricing" className="text-sm font-medium text-text-secondary hover:text-white transition-colors">Pricing</Link>
-                    <Link to="/contact" className="text-sm font-medium text-text-secondary hover:text-white transition-colors">Contact Us</Link>
+                <div className="hidden md:flex items-center gap-4 lg:gap-8">
+                    <Link to="/#faq" className="text-sm font-medium text-text-secondary hover:text-white transition-colors whitespace-nowrap">FAQs</Link>
+                    <Link to="/docs" className="text-sm font-medium text-text-secondary hover:text-white transition-colors whitespace-nowrap">Documentation</Link>
+                    <Link to="/pricing" className="text-sm font-medium text-text-secondary hover:text-white transition-colors whitespace-nowrap">Pricing</Link>
+                    <Link to="/contact" className="text-sm font-medium text-text-secondary hover:text-white transition-colors whitespace-nowrap">Contact Us</Link>
                 </div>
 
                 <div className="hidden md:flex items-center space-x-4">

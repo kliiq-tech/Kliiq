@@ -5,7 +5,7 @@ import { Link } from 'react-router-dom'
 
 export function SignUp() {
     return (
-        <div className="min-h-screen bg-background flex flex-col items-center justify-center p-4">
+        <div className="dark min-h-screen bg-background flex flex-col items-center justify-center p-4">
             <Link to="/" className="mb-8 text-2xl font-bold bg-brand-gradient bg-clip-text text-transparent">
                 Kliiq
             </Link>
