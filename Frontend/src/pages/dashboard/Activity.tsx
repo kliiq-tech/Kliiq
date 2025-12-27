@@ -1,4 +1,4 @@
-import { HardDrive, Monitor, ShieldCheck, User, Wifi } from 'lucide-react'
+import { HardDrive, ShieldCheck, Wifi } from 'lucide-react'
 
 const activityLog = [
     { time: "10:42 AM", user: "Odin Dev", action: "Updated visual-studio-code", type: "software" },
