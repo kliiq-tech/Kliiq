@@ -108,7 +108,6 @@ export function Hero() {
                             <div className="w-3 h-3 rounded-full bg-white/10"></div>
                             <div className="w-3 h-3 rounded-full bg-white/10"></div>
                         </div>
-                        <div className="text-[10px] font-mono text-text-muted uppercase tracking-[0.2em]">Kliiq Dashboard Console</div>
                         <div className="w-12 h-1 rounded-full bg-white/5"></div>
                     </div>
                     {/* Image Container */}
@@ -116,7 +115,7 @@ export function Hero() {
                         <img
                             src="/assets/dashboard-hero.png"
                             alt="Kliiq Dashboard Interface"
-                            className="w-full h-full object-cover object-top opacity-90 transition-opacity duration-700 group-hover:opacity-100"
+                            className="w-full h-full object-contain object-top opacity-90 transition-opacity duration-700 group-hover:opacity-100"
                         />
                         {/* Technical Overlay */}
                         <div className="absolute inset-0 bg-gradient-to-t from-[#0B0D10] via-transparent to-transparent pointer-events-none opacity-40" />

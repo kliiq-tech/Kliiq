@@ -3,7 +3,7 @@ import { cn } from '../../lib/utils'
 
 interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
     variant?: 'primary' | 'secondary' | 'ghost' | 'outline'
-    size?: 'sm' | 'md' | 'lg'
+    size?: 'sm' | 'md' | 'lg' | 'icon'
 }
 
 const Button = forwardRef<HTMLButtonElement, ButtonProps>(
@@ -17,10 +17,11 @@ const Button = forwardRef<HTMLButtonElement, ButtonProps>(
                         'bg-brand-gradient text-white hover:opacity-90 shadow-lg shadow-primary/25': variant === 'primary',
                         'bg-surface text-white border border-white/10 hover:bg-surface/80 hover:border-white/20': variant === 'secondary',
                         'border border-white/10 bg-transparent text-white hover:bg-white/5': variant === 'outline',
-                        'bg-transparent text-text-secondary hover:text-white hover:bg-white/5': variant === 'ghost',
+                        'bg-transparent text-text-secondary hover:text-text-primary hover:bg-gray-100 dark:hover:bg-white/5': variant === 'ghost',
                         'h-9 px-4 text-sm': size === 'sm',
                         'h-12 px-6 text-base': size === 'md',
                         'h-14 px-8 text-lg': size === 'lg',
+                        'h-9 w-9 p-0': size === 'icon',
                     },
                     className
                 )}

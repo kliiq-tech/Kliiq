@@ -5,6 +5,33 @@
 @tailwind utilities;
 
 @layer base {
+  :root {
+    /* Light Mode - Pure White */
+    --background: 255 255 255;
+    --surface: 249 250 251;
+    /* Gray 50 */
+    --primary: 10 132 255;
+    --primary-end: 76 0 255;
+    --accent: 0 212 255;
+    --text-primary: 17 24 39;
+    --text-secondary: 75 85 99;
+    --text-muted: 107 114 128;
+    --border: 229 231 235;
+  }
+
+  .dark {
+    /* Dark Mode - Deep Black */
+    --background: 0 0 0;
+    --surface: 11 13 16;
+    --primary: 10 132 255;
+    --primary-end: 76 0 255;
+    --accent: 0 212 255;
+    --text-primary: 255 255 255;
+    --text-secondary: 156 163 175;
+    --text-muted: 75 85 99;
+    --border: 255 255 255;
+  }
+
   body {
     @apply bg-background text-text-primary antialiased;
     font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
@@ -40,14 +67,9 @@
 }
 
 ::-webkit-scrollbar-track {
-  background: #0B0D10;
+  background: transparent;
 }
 
 ::-webkit-scrollbar-thumb {
-  background: #1F2937;
-  border-radius: 10px;
-}
-
-::-webkit-scrollbar-thumb:hover {
-  background: #0A84FF;
+  @apply bg-gray-200 dark:bg-gray-800 rounded-full hover:bg-primary;
 }

@@ -4,21 +4,23 @@ export default {
     "./index.html",
     "./src/**/*.{js,ts,jsx,tsx}",
   ],
+  darkMode: 'class',
   theme: {
     extend: {
       colors: {
-        background: '#0B0D10', // Deep Tech Black
-        surface: '#111827', // Dark Slate
+        background: 'rgb(var(--background) / <alpha-value>)',
+        surface: 'rgb(var(--surface) / <alpha-value>)',
         primary: {
-          DEFAULT: '#0A84FF', // Brand Gradient Start
-          end: '#4C00FF',    // Brand Gradient End
+          DEFAULT: 'rgb(var(--primary) / <alpha-value>)',
+          end: 'rgb(var(--primary-end) / <alpha-value>)',
         },
-        accent: '#00D4FF', // Neon Aqua
+        accent: 'rgb(var(--accent) / <alpha-value>)',
         text: {
-          primary: '#FFFFFF',
-          secondary: '#C9D1D9',
-          muted: '#6B7280',
-        }
+          primary: 'rgb(var(--text-primary) / <alpha-value>)',
+          secondary: 'rgb(var(--text-secondary) / <alpha-value>)',
+          muted: 'rgb(var(--text-muted) / <alpha-value>)',
+        },
+        border: 'rgb(var(--border) / <alpha-value>)',
       },
       fontFamily: {
         sans: ['Inter', 'sans-serif'],
