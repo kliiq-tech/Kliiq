@@ -1,8 +1,9 @@
 import { Link, Outlet, useLocation, useNavigate } from 'react-router-dom'
-import { LayoutDashboard, Monitor, ShieldCheck, Activity, Settings, LogOut, Cpu, Grid } from 'lucide-react'
+import { LayoutDashboard, Monitor, ShieldCheck, Activity, Settings, LogOut, Cpu, Grid, Menu, X as CloseIcon } from 'lucide-react'
 import { cn } from '../lib/utils'
-import { motion } from 'framer-motion'
+import { motion, AnimatePresence } from 'framer-motion'
 import { Button } from '../components/ui/Button'
+import { useState, useEffect } from 'react'
 
 const sidebarItems = [
     { icon: LayoutDashboard, label: 'Overview', path: '/dashboard' },
@@ -17,25 +18,52 @@ const sidebarItems = [
 export function DashboardLayout() {
     const location = useLocation()
     const navigate = useNavigate()
+    const [isSidebarOpen, setIsSidebarOpen] = useState(false)
+
+    // Close sidebar when route changes on mobile
+    useEffect(() => {
+        setIsSidebarOpen(false)
+    }, [location.pathname])
 
     const handleLogout = () => {
-        // In a real app, we would clear session/tokens here
         navigate('/signin')
     }
 
     return (
-        <div className="min-h-screen bg-white dark:bg-background text-gray-900 dark:text-white flex font-sans selection:bg-primary/30 transition-colors duration-300">
-            {/* Sidebar - 2D System Panel Style */}
-            <aside className="w-64 border-r border-gray-200 dark:border-white/10 flex flex-col fixed inset-y-0 h-full bg-white/95 dark:bg-background/95 backdrop-blur-sm z-50 transition-colors duration-300">
+        <div className="min-h-screen bg-white dark:bg-background text-gray-900 dark:text-white flex font-sans selection:bg-primary/30 transition-colors duration-300 overflow-x-hidden">
+            {/* Mobile Overlay */}
+            <AnimatePresence>
+                {isSidebarOpen && (
+                    <motion.div
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        exit={{ opacity: 0 }}
+                        onClick={() => setIsSidebarOpen(false)}
+                        className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[60] lg:hidden"
+                    />
+                )}
+            </AnimatePresence>
+
+            {/* Sidebar */}
+            <aside className={cn(
+                "fixed inset-y-0 left-0 w-64 border-r border-gray-200 dark:border-white/10 flex flex-col bg-white/95 dark:bg-background/95 backdrop-blur-sm z-[70] transition-transform duration-300 lg:translate-x-0",
+                isSidebarOpen ? "translate-x-0" : "-translate-x-full"
+            )}>
                 {/* Brand Header */}
-                <div className="h-16 flex items-center px-6 border-b border-gray-200 dark:border-white/10">
+                <div className="h-16 flex items-center justify-between px-6 border-b border-gray-200 dark:border-white/10">
                     <Link to="/" className="text-2xl font-bold bg-brand-gradient bg-clip-text text-transparent flex items-center">
                         Kliiq
                     </Link>
+                    <button
+                        onClick={() => setIsSidebarOpen(false)}
+                        className="p-2 lg:hidden text-gray-500 hover:text-gray-900 dark:text-text-muted dark:hover:text-white"
+                    >
+                        <CloseIcon className="w-5 h-5" />
+                    </button>
                 </div>
 
                 {/* Navigation */}
-                <nav className="flex-1 py-6 px-3 space-y-1">
+                <nav className="flex-1 py-6 px-3 space-y-1 overflow-y-auto">
                     {sidebarItems.map((item) => {
                         const isActive = location.pathname === item.path
                         const Icon = item.icon
@@ -98,22 +126,30 @@ export function DashboardLayout() {
             </aside>
 
             {/* Main Content */}
-            <main className="flex-1 pl-64 ml-0">
-                {/* Top Bar (Optional, can be merged into page headers) */}
-                <header className="h-16 border-b border-gray-200 dark:border-white/10 flex items-center justify-between px-8 sticky top-0 bg-white/80 dark:bg-background/80 backdrop-blur-md z-40 transition-colors duration-300">
-                    <div className="flex items-center gap-4 text-sm text-gray-500 dark:text-text-muted">
-                        <div className="flex items-center gap-2">
-                            <span className="w-2 h-2 rounded-full bg-green-500 animate-pulse"></span>
-                            Online
+            <main className="flex-1 lg:pl-64 w-full transition-all duration-300">
+                {/* Top Bar */}
+                <header className="h-16 border-b border-gray-200 dark:border-white/10 flex items-center justify-between px-4 lg:px-8 sticky top-0 bg-white/80 dark:bg-background/80 backdrop-blur-md z-40 transition-colors duration-300">
+                    <div className="flex items-center gap-3">
+                        <button
+                            onClick={() => setIsSidebarOpen(true)}
+                            className="p-2 lg:hidden text-gray-500 hover:text-gray-900 dark:text-text-muted dark:hover:text-white"
+                        >
+                            <Menu className="w-6 h-6" />
+                        </button>
+                        <div className="hidden sm:flex items-center gap-4 text-sm text-gray-500 dark:text-text-muted">
+                            <div className="flex items-center gap-2">
+                                <span className="w-2 h-2 rounded-full bg-green-500 animate-pulse"></span>
+                                Online
+                            </div>
+                            <span className="text-[10px] font-bold text-gray-400 dark:text-text-muted uppercase tracking-[0.2em] px-2 py-1 bg-gray-100 dark:bg-white/5 rounded-md border border-gray-200 dark:border-white/10">Admin</span>
                         </div>
-                        <span className="text-[10px] font-bold text-gray-400 dark:text-text-muted uppercase tracking-[0.2em] px-2 py-1 bg-gray-100 dark:bg-white/5 rounded-md border border-gray-200 dark:border-white/10">Admin</span>
                     </div>
                     <div className="text-xs font-mono text-gray-400 dark:text-white/20">
                         v1.0-stable
                     </div>
                 </header>
 
-                <div className="p-8">
+                <div className="p-4 lg:p-8 max-w-full">
                     <Outlet />
                 </div>
             </main>

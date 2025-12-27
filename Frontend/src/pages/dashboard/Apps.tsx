@@ -1,23 +1,15 @@
-import { Search, Plus, Trash2, DownloadCloud, Check, X, Building2, ChevronDown } from 'lucide-react'
+import { Search, Plus, Trash2, DownloadCloud, Check, X, Building2, ChevronDown, Trash } from 'lucide-react'
 import { useState, useEffect } from 'react'
 import { Button } from '../../components/ui/Button'
 import { cn } from '../../lib/utils'
 import { Link } from 'react-router-dom'
+import { ALL_APPS, APP_CATEGORIES } from '../../data/apps'
+import { downloadInstaller } from '../../lib/installer'
 
 // Data for apps using categories as in the provided image
-interface App {
-    id: string;
-    name: string;
-    domain: string;
-    version: string;
-    size: string;
-}
 
-interface Category {
-    name: string;
-    icon?: any;
-    apps: App[];
-}
+
+
 
 interface Pack {
     id: string;
@@ -26,115 +18,15 @@ interface Pack {
     color: string;
 }
 
-const categories: Category[] = [
-    {
-        name: "Web Browsers",
-        apps: [
-            { id: "chrome", name: "Chrome", domain: "chrome.com", version: "v120.0", size: "95 MB" },
-            { id: "firefox", name: "Firefox", domain: "mozilla.org", version: "v121.0", size: "112 MB" },
-            { id: "edge", name: "Edge", domain: "microsoftedge.com", version: "v120.0", size: "145 MB" },
-            { id: "brave", name: "Brave", domain: "brave.com", version: "v1.61", size: "98 MB" },
-            { id: "opera", name: "Opera", domain: "opera.com", version: "v106.0", size: "105 MB" },
-        ]
-    },
-    {
-        name: "Messaging",
-        apps: [
-            { id: "zoom", name: "Zoom", domain: "zoom.us", version: "v5.17", size: "82 MB" },
-            { id: "discord", name: "Discord", domain: "discord.com", version: "v1.0.9031", size: "156 MB" },
-            { id: "teams", name: "Teams", domain: "teams.microsoft.com", version: "v24004", size: "210 MB" },
-            { id: "slack", name: "Slack", domain: "slack.com", version: "v4.36", size: "185 MB" },
-            { id: "whatsapp", name: "WhatsApp", domain: "whatsapp.com", version: "v2.23", size: "92 MB" },
-        ]
-    },
-    {
-        name: "Media",
-        apps: [
-            { id: "itunes", name: "iTunes", domain: "apple.com", version: "12.13", size: "256 MB" },
-            { id: "vlc", name: "VLC", domain: "videolan.org", version: "3.0.20", size: "42 MB" },
-            { id: "spotify", name: "Spotify", domain: "spotify.com", version: "1.2.25", size: "82 MB" },
-            { id: "handbrake", name: "Handbrake", domain: "handbrake.fr", version: "1.7.2", size: "28 MB" },
-        ]
-    },
-    {
-        name: "Other",
-        apps: [
-            { id: "evernote", name: "Evernote", domain: "evernote.com", version: "10.68", size: "142 MB" },
-            { id: "steam", name: "Steam", domain: "steampowered.com", version: "Latest", size: "2 MB" },
-            { id: "everything", name: "Everything", domain: "voidtools.com", version: "1.4.1", size: "1.5 MB" },
-        ]
-    },
-    {
-        name: "Imaging",
-        apps: [
-            { id: "krita", name: "Krita", domain: "krita.org", version: "5.2.2", size: "124 MB" },
-            { id: "blender", name: "Blender", domain: "blender.org", version: "4.0.2", size: "312 MB" },
-            { id: "paint-net", name: "Paint.NET", domain: "getpaint.net", version: "5.0.11", size: "62 MB" },
-            { id: "gimp", name: "GIMP", domain: "gimp.org", version: "2.10.36", size: "285 MB" },
-        ]
-    },
-    {
-        name: "Documents",
-        apps: [
-            { id: "foxit-reader", name: "Foxit Reader", domain: "foxit.com", version: "2023.3", size: "158 MB" },
-            { id: "libreoffice", name: "LibreOffice", domain: "libreoffice.org", version: "7.6.4", size: "345 MB" },
-            { id: "sumatrapdf", name: "SumatraPDF", domain: "sumatrapdfreader.org", version: "3.5.2", size: "12 MB" },
-        ]
-    },
-    {
-        name: "Security",
-        apps: [
-            { id: "malwarebytes", name: "Malwarebytes", domain: "malwarebytes.com", version: "4.6.6", size: "280 MB" },
-            { id: "avast", name: "Avast", domain: "avast.com", version: "23.12", size: "712 MB" },
-            { id: "avg", name: "AVG", domain: "avg.com", version: "23.12", size: "705 MB" },
-        ]
-    },
-    {
-        name: "Online Storage",
-        apps: [
-            { id: "dropbox", name: "Dropbox", domain: "dropbox.com", version: "188.4", size: "215 MB" },
-            { id: "googledrive", name: "Google Drive", domain: "google.com", version: "84.0", size: "245 MB" },
-            { id: "onedrive", name: "OneDrive", domain: "microsoft.com", version: "23.226", size: "198 MB" },
-        ]
-    },
-    {
-        name: "Compression",
-        apps: [
-            { id: "7zip", name: "7-Zip", domain: "7-zip.org", version: "23.01", size: "1.5 MB" },
-            { id: "peazip", name: "PeaZip", domain: "peazip.github.io", version: "9.6.0", size: "10 MB" },
-            { id: "winrar", name: "WinRAR", domain: "win-rar.com", version: "6.24", size: "3.5 MB" },
-        ]
-    },
-    {
-        name: "Runtime",
-        apps: [
-            { id: "dotnet-desktop-7", name: ".NET Desktop 7", domain: "microsoft.com", version: "7.0.14", size: "55 MB" },
-            { id: "java-openjdk-17", name: "OpenJDK 17", domain: "oracle.com", version: "17.0.9", size: "185 MB" },
-            { id: "vcredist-2015-2022", name: "VC++ 2015-2022", domain: "microsoft.com", version: "14.38", size: "24 MB" },
-        ]
-    },
-    {
-        name: "Developer Tools",
-        apps: [
-            { id: "vscode", name: "VS Code", domain: "code.visualstudio.com", version: "v1.85", size: "312 MB" },
-            { id: "python", name: "Python 3.12", domain: "python.org", version: "3.12.1", size: "25 MB" },
-            { id: "git", name: "Git", domain: "git-scm.com", version: "2.43.0", size: "58 MB" },
-            { id: "docker", name: "Docker Desktop", domain: "docker.com", version: "v4.26", size: "580 MB" },
-            { id: "cursor", name: "Cursor", domain: "cursor.com", version: "v0.15", size: "145 MB" },
-        ]
-    },
-    {
-        name: "Utilities",
-        apps: [
-            { id: "anydesk", name: "AnyDesk", domain: "anydesk.com", version: "7.1.13", size: "5 MB" },
-            { id: "teamviewer", name: "TeamViewer", domain: "teamviewer.com", version: "15.48", size: "65 MB" },
-            { id: "wiztree", name: "WizTree", domain: "diskanalyzer.com", version: "4.15", size: "6 MB" },
-            { id: "ccleaner", name: "CCleaner", domain: "ccleaner.com", version: "6.19", size: "75 MB" },
-        ]
-    }
-]
+// Categories will be generated dynamically below
 
-const allApps = categories.flatMap(c => c.apps)
+// Group apps by category for display
+const categories = APP_CATEGORIES.map(cat => ({
+    name: cat,
+    apps: ALL_APPS.filter(app => app.category === cat)
+})).filter(cat => cat.apps.length > 0 && cat.name !== "Games (Mobile)");
+
+const allApps = ALL_APPS;
 
 export function DashboardApps() {
     const [searchQuery, setSearchQuery] = useState('')
@@ -243,17 +135,10 @@ export function DashboardApps() {
     const handleInstall = (appId: string) => {
         setAppStatus(prev => ({ ...prev, [appId]: 'installing' }))
 
-        // Mock the download logic from AppInstaller.tsx
         const app = allApps.find(a => a.id === appId)
-        const scriptContent = `@echo off\necho Installing ${app?.name}...\nwinget install --id ${appId} -e\npause`
-        const blob = new Blob([scriptContent], { type: 'text/plain' })
-        const url = window.URL.createObjectURL(blob)
-        const a = document.createElement('a')
-        a.href = url
-        a.download = `Kliiq_${app?.name}_Installer.bat`
-        document.body.appendChild(a)
-        a.click()
-        document.body.removeChild(a)
+        if (app) {
+            downloadInstaller([{ id: app.id, name: app.name }]);
+        }
 
         setTimeout(() => {
             setAppStatus(prev => ({ ...prev, [appId]: 'installed' }))
@@ -341,23 +226,34 @@ export function DashboardApps() {
                                         <div className="font-bold text-gray-900 dark:text-white group-hover:text-primary transition-colors">{app.name}</div>
                                         <div className="text-[10px] font-bold text-gray-400 dark:text-text-muted uppercase tracking-wider mb-2">{(app as any).version || 'v1.0'} • {(app as any).size || '0 MB'}</div>
 
-                                        <div className="flex flex-col gap-2 absolute right-5 top-5 z-10">
+                                        <div className="flex flex-col gap-2 absolute right-5 top-5 z-10 md:static md:mt-4 md:flex-row md:justify-end">
                                             {appStatus[app.id] === 'installed' ? (
-                                                <>
+                                                <div className="flex items-center gap-2">
                                                     <Button disabled className="h-8 bg-green-500/10 text-green-500 border-green-500/20 text-[10px] font-bold gap-2 px-3">
                                                         <Check className="w-3 h-3" />
                                                         Installed
                                                     </Button>
                                                     <Button
-                                                        variant="outline"
-                                                        className="h-8 px-3 border-red-500/20 text-red-500 hover:bg-red-500 hover:text-white text-[10px] font-bold"
+                                                        variant="ghost"
+                                                        size="sm"
+                                                        className="h-8 text-[10px] font-bold gap-2 text-gray-400 hover:text-red-500"
                                                         onClick={() => handleUninstall(app.id)}
                                                     >
+                                                        <Trash className="w-3 h-3" />
                                                         Uninstall
                                                     </Button>
-                                                </>
+                                                    <Button
+                                                        variant="ghost"
+                                                        size="sm"
+                                                        className="h-8 text-[10px] font-bold gap-2 text-primary hover:bg-primary/5"
+                                                        onClick={() => addAppToPack(app.id)}
+                                                    >
+                                                        <Plus className="w-3 h-3" />
+                                                        Add to Pack
+                                                    </Button>
+                                                </div>
                                             ) : (
-                                                <>
+                                                <div className="flex items-center gap-2">
                                                     <Button
                                                         className="h-8 text-[10px] font-bold gap-2 px-4 whitespace-nowrap"
                                                         onClick={() => handleInstall(app.id)}
@@ -375,7 +271,7 @@ export function DashboardApps() {
                                                         <Plus className="w-3 h-3" />
                                                         Add to Pack
                                                     </Button>
-                                                </>
+                                                </div>
                                             )}
                                         </div>
                                     </div>
