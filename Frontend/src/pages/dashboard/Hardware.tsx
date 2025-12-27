@@ -105,7 +105,7 @@ export function DashboardHardware() {
 
             <div className="bg-white dark:bg-surface/20 border border-gray-200 dark:border-white/10 rounded-xl p-6 shadow-sm dark:shadow-none">
                 <h3 className="text-lg font-semibold text-gray-900 dark:text-text-primary mb-4">Peripherals</h3>
-                <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
                     {['Logitech MX Master 3S', 'Keychron Q1 Pro', 'Dell U2723QE', 'Focusrite Scarlett 2i2'].map((p) => (
                         <div key={p} className="p-3 bg-gray-50 dark:bg-white/5 rounded border border-gray-100 dark:border-white/5 text-sm text-gray-700 dark:text-text-secondary flex items-center justify-between">
                             {p}

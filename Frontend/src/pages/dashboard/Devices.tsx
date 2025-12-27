@@ -143,88 +143,92 @@ export function DashboardDevices() {
 
             {/* Devices List Table Style */}
             <div className="bg-white dark:bg-surface/20 border border-gray-200 dark:border-white/10 rounded-xl overflow-hidden min-h-[400px] shadow-sm dark:shadow-none">
-                <div className="grid grid-cols-12 gap-4 p-4 border-b border-gray-100 dark:border-white/10 text-xs font-semibold text-gray-500 dark:text-text-muted uppercase tracking-wider">
-                    <div className="col-span-4">Device Name</div>
-                    <div className="col-span-2">Status</div>
-                    <div className="col-span-3">OS & Specs</div>
-                    <div className="col-span-2">Last Sync</div>
-                    <div className="col-span-1 text-right">Actions</div>
-                </div>
-
-                <div className="divide-y divide-gray-100 dark:divide-white/5">
-                    {devices.map((device) => (
-                        <div key={device.id} className="grid grid-cols-12 gap-4 p-4 items-center hover:bg-gray-50 dark:hover:bg-white/5 transition-colors group relative">
-                            {/* Device Info */}
-                            <div className="col-span-4 flex items-center gap-3">
-                                <div className="w-10 h-10 rounded bg-gray-100 dark:bg-white/5 flex items-center justify-center text-gray-400 dark:text-text-muted group-hover:text-primary transition-colors">
-                                    {device.type === 'mobile' ? <Smartphone className="w-5 h-5" /> :
-                                        device.type === 'laptop' ? <Laptop className="w-5 h-5" /> :
-                                            <Monitor className="w-5 h-5" />}
-                                </div>
-                                <div className="flex flex-col">
-                                    <div className="flex items-center gap-2">
-                                        <div className="text-sm font-medium text-gray-900 dark:text-text-primary">{device.name}</div>
-                                        {device.isHost && (
-                                            <span className="text-[10px] font-bold bg-primary/10 text-primary border border-primary/20 px-1.5 rounded uppercase tracking-wider">
-                                                (Host)
-                                            </span>
-                                        )}
-                                    </div>
-                                    <div className="text-xs text-gray-500 dark:text-text-muted">ID: {device.id}</div>
-                                </div>
-                            </div>
-
-                            {/* Status */}
-                            <div className="col-span-2">
-                                <div className={cn(
-                                    "inline-flex items-center gap-2 px-2.5 py-1 rounded-full text-xs font-medium border",
-                                    device.status === 'online' ? "bg-green-500/10 text-green-600 dark:text-green-400 border-green-500/20" :
-                                        device.status === 'warning' ? "bg-yellow-500/10 text-yellow-600 dark:text-yellow-400 border-yellow-500/20" :
-                                            "bg-gray-500/10 text-gray-500 dark:text-gray-400 border-gray-500/20"
-                                )}>
-                                    <span className={cn("w-1.5 h-1.5 rounded-full",
-                                        device.status === 'online' ? "bg-green-500 dark:bg-green-400" :
-                                            device.status === 'warning' ? "bg-yellow-500 dark:bg-yellow-400" :
-                                                "bg-gray-500 dark:bg-gray-400"
-                                    )} />
-                                    {device.status.charAt(0).toUpperCase() + device.status.slice(1)}
-                                </div>
-                            </div>
-
-                            {/* OS */}
-                            <div className="col-span-3">
-                                <div className="text-sm text-gray-700 dark:text-text-primary/80">{device.os}</div>
-                                <div className="text-xs text-gray-400 dark:text-text-muted">{device.specs}</div>
-                            </div>
-
-                            {/* Sync */}
-                            <div className="col-span-2 text-sm text-gray-500 dark:text-text-muted font-mono">
-                                {device.lastSync}
-                            </div>
-
-                            {/* Actions */}
-                            <div className="col-span-1 text-right flex justify-end relative group/menu">
-                                <Button variant="ghost" size="icon" className="h-8 w-8 hover:bg-gray-100 dark:hover:bg-white/10 peer">
-                                    <MoreVertical className="w-4 h-4 text-gray-400 dark:text-text-muted" />
-                                </Button>
-                                {/* Dropdown Menu (Quick & Dirty Implementation without Radix UI for speed) */}
-                                <div className="absolute right-8 top-0 w-48 bg-white dark:bg-surface border border-gray-200 dark:border-white/10 rounded-lg shadow-xl py-1 hidden group-hover/menu:block hover:block z-10 peer-focus:block">
-                                    <button
-                                        onClick={() => handleAction('change_host', device.id)}
-                                        className="w-full text-left px-4 py-2 text-sm text-gray-700 dark:text-text-secondary hover:text-gray-900 dark:hover:text-white hover:bg-gray-50 dark:hover:bg-white/5 flex items-center gap-2"
-                                    >
-                                        <Shield className="w-4 h-4" /> Change Host
-                                    </button>
-                                    <button
-                                        onClick={() => handleAction('remove', device.id)}
-                                        className="w-full text-left px-4 py-2 text-sm text-red-500 dark:text-red-400 hover:text-red-600 dark:hover:text-red-300 hover:bg-red-50 dark:hover:bg-red-500/10 flex items-center gap-2"
-                                    >
-                                        <Trash2 className="w-4 h-4" /> Remove Device
-                                    </button>
-                                </div>
-                            </div>
+                <div className="responsive-table-container">
+                    <div className="min-w-[800px]">
+                        <div className="grid grid-cols-12 gap-4 p-4 border-b border-gray-100 dark:border-white/10 text-xs font-semibold text-gray-500 dark:text-text-muted uppercase tracking-wider">
+                            <div className="col-span-4">Device Name</div>
+                            <div className="col-span-2">Status</div>
+                            <div className="col-span-3">OS & Specs</div>
+                            <div className="col-span-2">Last Sync</div>
+                            <div className="col-span-1 text-right">Actions</div>
                         </div>
-                    ))}
+
+                        <div className="divide-y divide-gray-100 dark:divide-white/5">
+                            {devices.map((device) => (
+                                <div key={device.id} className="grid grid-cols-12 gap-4 p-4 items-center hover:bg-gray-50 dark:hover:bg-white/5 transition-colors group relative">
+                                    {/* Device Info */}
+                                    <div className="col-span-4 flex items-center gap-3">
+                                        <div className="w-10 h-10 rounded bg-gray-100 dark:bg-white/5 flex items-center justify-center text-gray-400 dark:text-text-muted group-hover:text-primary transition-colors">
+                                            {device.type === 'mobile' ? <Smartphone className="w-5 h-5" /> :
+                                                device.type === 'laptop' ? <Laptop className="w-5 h-5" /> :
+                                                    <Monitor className="w-5 h-5" />}
+                                        </div>
+                                        <div className="flex flex-col">
+                                            <div className="flex items-center gap-2">
+                                                <div className="text-sm font-medium text-gray-900 dark:text-text-primary">{device.name}</div>
+                                                {device.isHost && (
+                                                    <span className="text-[10px] font-bold bg-primary/10 text-primary border border-primary/20 px-1.5 rounded uppercase tracking-wider">
+                                                        (Host)
+                                                    </span>
+                                                )}
+                                            </div>
+                                            <div className="text-xs text-gray-500 dark:text-text-muted">ID: {device.id}</div>
+                                        </div>
+                                    </div>
+
+                                    {/* Status */}
+                                    <div className="col-span-2">
+                                        <div className={cn(
+                                            "inline-flex items-center gap-2 px-2.5 py-1 rounded-full text-xs font-medium border",
+                                            device.status === 'online' ? "bg-green-500/10 text-green-600 dark:text-green-400 border-green-500/20" :
+                                                device.status === 'warning' ? "bg-yellow-500/10 text-yellow-600 dark:text-yellow-400 border-yellow-500/20" :
+                                                    "bg-gray-500/10 text-gray-500 dark:text-gray-400 border-gray-500/20"
+                                        )}>
+                                            <span className={cn("w-1.5 h-1.5 rounded-full",
+                                                device.status === 'online' ? "bg-green-500 dark:bg-green-400" :
+                                                    device.status === 'warning' ? "bg-yellow-500 dark:bg-yellow-400" :
+                                                        "bg-gray-500 dark:bg-gray-400"
+                                            )} />
+                                            {device.status.charAt(0).toUpperCase() + device.status.slice(1)}
+                                        </div>
+                                    </div>
+
+                                    {/* OS */}
+                                    <div className="col-span-3">
+                                        <div className="text-sm text-gray-700 dark:text-text-primary/80">{device.os}</div>
+                                        <div className="text-xs text-gray-400 dark:text-text-muted">{device.specs}</div>
+                                    </div>
+
+                                    {/* Sync */}
+                                    <div className="col-span-2 text-sm text-gray-500 dark:text-text-muted font-mono">
+                                        {device.lastSync}
+                                    </div>
+
+                                    {/* Actions */}
+                                    <div className="col-span-1 text-right flex justify-end relative group/menu">
+                                        <Button variant="ghost" size="icon" className="h-8 w-8 hover:bg-gray-100 dark:hover:bg-white/10 peer">
+                                            <MoreVertical className="w-4 h-4 text-gray-400 dark:text-text-muted" />
+                                        </Button>
+                                        {/* Dropdown Menu (Quick & Dirty Implementation without Radix UI for speed) */}
+                                        <div className="absolute right-8 top-0 w-48 bg-white dark:bg-surface border border-gray-200 dark:border-white/10 rounded-lg shadow-xl py-1 hidden group-hover/menu:block hover:block z-10 peer-focus:block">
+                                            <button
+                                                onClick={() => handleAction('change_host', device.id)}
+                                                className="w-full text-left px-4 py-2 text-sm text-gray-700 dark:text-text-secondary hover:text-gray-900 dark:hover:text-white hover:bg-gray-50 dark:hover:bg-white/5 flex items-center gap-2"
+                                            >
+                                                <Shield className="w-4 h-4" /> Change Host
+                                            </button>
+                                            <button
+                                                onClick={() => handleAction('remove', device.id)}
+                                                className="w-full text-left px-4 py-2 text-sm text-red-500 dark:text-red-400 hover:text-red-600 dark:hover:text-red-300 hover:bg-red-50 dark:hover:bg-red-500/10 flex items-center gap-2"
+                                            >
+                                                <Trash2 className="w-4 h-4" /> Remove Device
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+                            ))}
+                        </div>
+                    </div>
                 </div>
             </div>
 

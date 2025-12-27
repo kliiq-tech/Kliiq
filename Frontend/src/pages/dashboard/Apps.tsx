@@ -166,17 +166,17 @@ export function DashboardApps() {
                 {/* Categories & Search */}
                 <div className="flex-1 space-y-6">
                     <div className="flex flex-col md:flex-row gap-4">
-                        <div className="relative">
+                        <div className="relative w-full md:w-auto">
                             <button
                                 onClick={() => setShowCategoryDropdown(!showCategoryDropdown)}
-                                className="h-[52px] px-6 rounded-2xl bg-white dark:bg-surface border border-gray-200 dark:border-white/10 flex items-center gap-3 text-sm font-bold text-gray-700 dark:text-white hover:border-primary/50 transition-all min-w-[160px] justify-between shadow-sm"
+                                className="h-[52px] w-full md:w-auto px-6 rounded-2xl bg-white dark:bg-surface border border-gray-200 dark:border-white/10 flex items-center gap-3 text-sm font-bold text-gray-700 dark:text-white hover:border-primary/50 transition-all md:min-w-[160px] justify-between shadow-sm"
                             >
                                 {activeCategory}
                                 <ChevronDown className={cn("w-4 h-4 transition-transform", showCategoryDropdown && "rotate-180")} />
                             </button>
 
                             {showCategoryDropdown && (
-                                <div className="absolute top-full left-0 mt-2 w-64 bg-white dark:bg-zinc-900 border border-gray-200 dark:border-white/10 rounded-2xl shadow-2xl py-2 z-50 animate-in fade-in zoom-in-95 duration-100">
+                                <div className="absolute top-full left-0 mt-2 w-full md:w-64 bg-white dark:bg-zinc-900 border border-gray-200 dark:border-white/10 rounded-2xl shadow-2xl py-2 z-50 animate-in fade-in zoom-in-95 duration-100">
                                     {['All', ...categories.map(c => c.name)].map((cat) => (
                                         <button
                                             key={cat}

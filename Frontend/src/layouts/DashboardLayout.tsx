@@ -121,9 +121,11 @@ export function DashboardLayout() {
                                 <span className="flex-1 text-[10px] font-black text-gray-400 dark:text-white/50 uppercase tracking-widest text-center">
                                     Free
                                 </span>
-                                <Button size="sm" className="h-[28px] text-[10px] px-3 font-black uppercase tracking-widest bg-gray-900 dark:bg-white text-white dark:text-black hover:bg-primary hover:text-white border-none">
-                                    Upgrade
-                                </Button>
+                                <Link to="/dashboard/upgrade">
+                                    <Button size="sm" className="h-[28px] text-[10px] px-3 font-black uppercase tracking-widest bg-gray-900 dark:bg-white text-white dark:text-black hover:bg-primary hover:text-white border-none">
+                                        Upgrade
+                                    </Button>
+                                </Link>
                             </div>
                         </div>
                     </div>
@@ -143,12 +145,12 @@ export function DashboardLayout() {
                                 <span className="text-[10px] font-bold text-gray-400 dark:text-text-muted uppercase tracking-[0.2em] px-2 py-1 bg-gray-100 dark:bg-white/5 rounded-sm border border-gray-200 dark:border-white/10">Admin</span>
                             </div>
                         </div>
-                        <div className="text-xs font-mono text-gray-400 dark:text-white/20">
+                        <div className="hidden md:block text-xs font-mono text-gray-400 dark:text-white/20">
                             v1.0-stable
                         </div>
                     </header>
 
-                    <div className="p-4 lg:p-8">
+                    <div className="p-4 sm:p-6 lg:p-8">
                         <Outlet />
                     </div>
                 </main>

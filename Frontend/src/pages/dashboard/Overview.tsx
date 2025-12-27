@@ -48,7 +48,7 @@ export function DashboardOverview() {
             </div>
 
             {/* Main Content Area - Split View */}
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 h-[600px]">
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 lg:h-[600px]">
 
                 {/* Visual Map / Device Nodes */}
                 <div className="lg:col-span-2 bg-gray-50/50 dark:bg-surface/20 rounded-xl border border-gray-200 dark:border-white/10 p-6 relative overflow-hidden group">
@@ -62,54 +62,56 @@ export function DashboardOverview() {
                     </h3>
 
                     {/* Interactive 2D Map Canvas */}
-                    <div className="relative h-full w-full min-h-[400px]">
-                        {/* Connecting Lines (Background) */}
-                        <svg className="absolute inset-0 w-full h-full pointer-events-none opacity-40 dark:opacity-20 transition-opacity">
-                            <line x1="150" y1="120" x2="400" y2="120" stroke="currentColor" className="text-gray-300 dark:text-white" strokeWidth="2" strokeDasharray="5,5" />
-                            <line x1="150" y1="120" x2="150" y2="300" stroke="currentColor" className="text-gray-300 dark:text-white" strokeWidth="2" strokeDasharray="5,5" />
-                            <line x1="400" y1="120" x2="400" y2="300" stroke="currentColor" className="text-gray-300 dark:text-white" strokeWidth="1" />
-                        </svg>
+                    <div className="responsive-table-container h-full">
+                        <div className="relative h-full w-full min-h-[400px] min-w-[600px] lg:min-w-0">
+                            {/* Connecting Lines (Background) */}
+                            <svg className="absolute inset-0 w-full h-full pointer-events-none opacity-40 dark:opacity-20 transition-opacity">
+                                <line x1="150" y1="120" x2="400" y2="120" stroke="currentColor" className="text-gray-300 dark:text-white" strokeWidth="2" strokeDasharray="5,5" />
+                                <line x1="150" y1="120" x2="150" y2="300" stroke="currentColor" className="text-gray-300 dark:text-white" strokeWidth="2" strokeDasharray="5,5" />
+                                <line x1="400" y1="120" x2="400" y2="300" stroke="currentColor" className="text-gray-300 dark:text-white" strokeWidth="1" />
+                            </svg>
 
-                        <DeviceNode
-                            name="Design-Lead-01"
-                            os="mac"
-                            status="online"
-                            specs={{ cpu: "M2 Max", ram: "32GB" }}
-                            position={{ x: 50, y: 50 }}
-                            peripherals={[
-                                { type: 'monitor', label: 'Studio Display', active: true }
-                            ]}
-                            onClick={() => navigate('/dashboard/devices')}
-                        />
+                            <DeviceNode
+                                name="Design-Lead-01"
+                                os="mac"
+                                status="online"
+                                specs={{ cpu: "M2 Max", ram: "32GB" }}
+                                position={{ x: 50, y: 50 }}
+                                peripherals={[
+                                    { type: 'monitor', label: 'Studio Display', active: true }
+                                ]}
+                                onClick={() => navigate('/dashboard/devices')}
+                            />
 
-                        <DeviceNode
-                            name="Dev-Station-Alpha"
-                            os="windows"
-                            status="warning"
-                            specs={{ cpu: "i9-13900K", ram: "64GB" }}
-                            position={{ x: 350, y: 50 }}
-                            peripherals={[
-                                { type: 'usb', label: 'Security Key', active: true },
-                                { type: 'drive', label: 'Backup SSD', active: false }
-                            ]}
-                            onClick={() => navigate('/dashboard/devices')}
-                        />
+                            <DeviceNode
+                                name="Dev-Station-Alpha"
+                                os="windows"
+                                status="warning"
+                                specs={{ cpu: "i9-13900K", ram: "64GB" }}
+                                position={{ x: 350, y: 50 }}
+                                peripherals={[
+                                    { type: 'usb', label: 'Security Key', active: true },
+                                    { type: 'drive', label: 'Backup SSD', active: false }
+                                ]}
+                                onClick={() => navigate('/dashboard/devices')}
+                            />
 
-                        <DeviceNode
-                            name="Finance-Server"
-                            os="linux"
-                            status="online"
-                            specs={{ cpu: "Xeon Gold", ram: "128GB" }}
-                            position={{ x: 50, y: 250 }}
-                        />
+                            <DeviceNode
+                                name="Finance-Server"
+                                os="linux"
+                                status="online"
+                                specs={{ cpu: "Xeon Gold", ram: "128GB" }}
+                                position={{ x: 50, y: 250 }}
+                            />
 
-                        <DeviceNode
-                            name="Guest-Laptop-04"
-                            os="windows"
-                            status="offline"
-                            specs={{ cpu: "i5-12400", ram: "16GB" }}
-                            position={{ x: 350, y: 250 }}
-                        />
+                            <DeviceNode
+                                name="Guest-Laptop-04"
+                                os="windows"
+                                status="offline"
+                                specs={{ cpu: "i5-12400", ram: "16GB" }}
+                                position={{ x: 350, y: 250 }}
+                            />
+                        </div>
                     </div>
                 </div>
 

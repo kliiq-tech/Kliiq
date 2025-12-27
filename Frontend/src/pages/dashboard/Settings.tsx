@@ -18,15 +18,17 @@ export function DashboardSettings() {
                     <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-6 flex items-center gap-2">
                         <User className="w-5 h-5 text-primary" /> Profile
                     </h3>
-                    <div className="flex items-center gap-4 mb-6">
-                        <div className="w-16 h-16 rounded-full bg-gradient-to-tr from-primary to-primary-end flex items-center justify-center text-xl font-bold text-white shadow-lg shadow-primary/20">
-                            OD
+                    <div className="flex flex-col sm:flex-row sm:items-center gap-6">
+                        <div className="flex items-center gap-4">
+                            <div className="w-16 h-16 rounded-full bg-gradient-to-tr from-primary to-primary-end flex items-center justify-center text-xl font-bold text-white shadow-lg shadow-primary/20 flex-shrink-0">
+                                OD
+                            </div>
+                            <div>
+                                <div className="font-bold text-gray-900 dark:text-white">Odin Dev</div>
+                                <div className="text-sm text-gray-500 dark:text-text-muted">odin@kliiq.io</div>
+                            </div>
                         </div>
-                        <div>
-                            <div className="font-bold text-gray-900 dark:text-white">Odin Dev</div>
-                            <div className="text-sm text-gray-500 dark:text-text-muted">odin@kliiq.io</div>
-                        </div>
-                        <Button variant="outline" size="sm" className="ml-auto border-gray-200 dark:border-white/10 text-gray-900 dark:text-white">Edit Profile</Button>
+                        <Button variant="outline" size="sm" className="sm:ml-auto border-gray-200 dark:border-white/10 text-gray-900 dark:text-white h-10 px-6 sm:h-9 sm:px-3">Edit Profile</Button>
                     </div>
                 </div>
 
