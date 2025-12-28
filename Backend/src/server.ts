@@ -17,6 +17,7 @@ export const supabase = createClient(supabaseUrl, supabaseKey);
 
 app.use(cors({
     origin: [
+        'https://kliiq-web.vercel.app',
         'https://kliiq.vercel.app',
         'http://localhost:5173',
         'http://localhost:3000'
