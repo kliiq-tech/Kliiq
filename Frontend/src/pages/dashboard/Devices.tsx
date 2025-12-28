@@ -4,54 +4,6 @@ import { cn } from '../../lib/utils'
 import { useState, useEffect } from 'react'
 import { supabase } from '../../lib/supabase'
 
-// Mock Data for Assigned Devices
-const initialDevices = [
-    {
-        id: "DEV-001",
-        name: "Design-Lead-01",
-        type: "desktop",
-        os: "macOS Sonoma",
-        status: "online",
-        lastSync: "2 mins ago",
-        specs: "M2 Max / 32GB RAM",
-        user: "Odin Dev",
-        isHost: false
-    },
-    {
-        id: "DEV-002",
-        name: "Dev-Station-Alpha",
-        type: "desktop",
-        os: "Windows 11 Pro",
-        status: "warning",
-        lastSync: "5 mins ago",
-        specs: "i9-13900K / 64GB RAM",
-        user: "Odin Dev",
-        isHost: true
-    },
-    {
-        id: "DEV-003",
-        name: "Mobile-Test-Unit",
-        type: "mobile",
-        os: "Android 14",
-        status: "offline",
-        lastSync: "2 hours ago",
-        specs: "Pixel 8 / 12GB RAM",
-        user: "Odin Dev",
-        isHost: false
-    },
-    {
-        id: "DEV-004",
-        name: "Guest-Laptop-04",
-        type: "laptop",
-        os: "Windows 10",
-        status: "offline",
-        lastSync: "1 day ago",
-        specs: "i5-12400 / 16GB RAM",
-        user: "Odin Dev",
-        isHost: false
-    }
-]
-
 export function DashboardDevices() {
     const [devices, setDevices] = useState<any[]>([])
     const [loading, setLoading] = useState(true)
