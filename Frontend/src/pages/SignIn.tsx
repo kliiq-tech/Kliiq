@@ -3,6 +3,7 @@ import { Input } from '../components/ui/Input'
 import { Card, CardContent, CardHeader, CardTitle, CardFooter } from '../components/ui/Card'
 import { Link, useNavigate } from 'react-router-dom'
 import { useState } from 'react'
+import { supabase } from '../lib/supabase'
 
 export function SignIn() {
     const navigate = useNavigate()
@@ -16,15 +17,22 @@ export function SignIn() {
         setError("")
         setIsLoading(true)
 
-        // Mock Authentication Logic
-        setTimeout(() => {
-            if (email === 'testuser@gmail.com' && password === 'password123') {
+        try {
+            const { data, error } = await supabase.auth.signInWithPassword({
+                email,
+                password,
+            })
+
+            if (error) throw error
+
+            if (data.user) {
                 navigate('/dashboard')
-            } else {
-                setError("Invalid email or password. Please try again.")
-                setIsLoading(false)
             }
-        }, 800)
+        } catch (err: any) {
+            setError(err.message || "Invalid email or password. Please try again.")
+        } finally {
+            setIsLoading(false)
+        }
     }
 
     return (

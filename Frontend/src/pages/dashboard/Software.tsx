@@ -1,4 +1,4 @@
-import { ShieldCheck, DownloadCloud, AlertCircle, Clock } from 'lucide-react'
+import { ShieldCheck, Clock, AlertCircle, DownloadCloud } from 'lucide-react'
 import { Button } from '../../components/ui/Button'
 
 const softwareList = [
@@ -45,7 +45,8 @@ export function DashboardSoftware() {
                 <div className="flex items-center gap-3">
                     <Button size="sm" className="gap-2">
                         <DownloadCloud className="w-4 h-4" />
-                        Scan All Nodes
+                        <span className="hidden sm:inline">Scan All Nodes</span>
+                        <span className="sm:hidden">Scan All</span>
                     </Button>
                 </div>
             </div>

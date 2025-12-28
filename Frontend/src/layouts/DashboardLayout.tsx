@@ -5,6 +5,8 @@ import { motion, AnimatePresence } from 'framer-motion'
 import { Button } from '../components/ui/Button'
 import { useState, useEffect } from 'react'
 import { useTheme } from '../components/theme-provider'
+import { supabase } from '../lib/supabase'
+import type { User } from '@supabase/supabase-js'
 
 const sidebarItems = [
     { icon: LayoutDashboard, label: 'Overview', path: '/dashboard' },
@@ -21,14 +23,49 @@ export function DashboardLayout() {
     const location = useLocation()
     const navigate = useNavigate()
     const [isSidebarOpen, setIsSidebarOpen] = useState(false)
+    const [user, setUser] = useState<User | null>(null)
+    const [loading, setLoading] = useState(true)
+
+    useEffect(() => {
+        // Initial session check
+        supabase.auth.getSession().then(({ data: { session } }) => {
+            if (!session) {
+                navigate('/signin')
+            } else {
+                setUser(session.user)
+            }
+            setLoading(false)
+        })
+
+        // Listen for auth changes
+        const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+            if (!session) {
+                navigate('/signin')
+            } else {
+                setUser(session.user)
+            }
+            setLoading(false)
+        })
+
+        return () => subscription.unsubscribe()
+    }, [navigate])
 
     // Close sidebar when route changes on mobile
     useEffect(() => {
         setIsSidebarOpen(false)
     }, [location.pathname])
 
-    const handleLogout = () => {
+    const handleLogout = async () => {
+        await supabase.auth.signOut()
         navigate('/signin')
+    }
+
+    if (loading) {
+        return (
+            <div className="min-h-screen bg-background flex items-center justify-center">
+                <div className="w-8 h-8 border-4 border-primary border-t-transparent rounded-full animate-spin" />
+            </div>
+        )
     }
 
     return (
@@ -99,14 +136,16 @@ export function DashboardLayout() {
                         <div className="bg-gray-50 dark:bg-white/5 rounded-2xl p-4 border border-gray-100 dark:border-white/5">
                             <div className="flex items-center justify-between mb-4">
                                 <div className="flex items-center gap-3">
-                                    <div className="w-10 h-10 rounded-full bg-primary/20 flex items-center justify-center text-primary font-bold">
-                                        OD
+                                    <div className="w-10 h-10 rounded-full bg-primary/20 flex items-center justify-center text-primary font-bold uppercase">
+                                        {user?.email?.substring(0, 2) || '??'}
                                     </div>
                                     <div className="flex flex-col">
-                                        <span className="text-sm font-bold text-gray-900 dark:text-white truncate max-w-[100px]">Odin Dev</span>
+                                        <span className="text-sm font-bold text-gray-900 dark:text-white truncate max-w-[100px]">
+                                            {user?.user_metadata?.full_name || user?.email?.split('@')[0] || 'User'}
+                                        </span>
                                         <div className="flex items-center gap-1.5">
                                             <div className="w-2 h-2 rounded-full bg-green-500 animate-pulse" />
-                                            <span className="text-[10px] font-bold text-gray-400 dark:text-white/40 uppercase tracking-widest">Online</span>
+                                            <span className="text-[10px] font-bold text-gray-400 dark:text-white/40 uppercase tracking-widest">Active</span>
                                         </div>
                                     </div>
                                 </div>

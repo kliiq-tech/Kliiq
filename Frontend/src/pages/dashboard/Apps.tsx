@@ -156,9 +156,10 @@ export function DashboardApps() {
                     <h1 className="text-2xl font-bold text-gray-900 dark:text-white mb-1">Apps & Tools</h1>
                     <p className="text-gray-500 dark:text-text-muted text-sm">Manage software, dependencies, and deployment packs</p>
                 </div>
-                <Button onClick={() => setShowCreateModal(true)} className="gap-2">
+                <Button onClick={() => setShowCreateModal(true)} className="gap-2 px-3 sm:px-4 h-9 sm:h-11">
                     <Plus className="w-4 h-4" />
-                    Create New Pack
+                    <span className="hidden sm:inline">Create New Pack</span>
+                    <span className="sm:hidden">New Pack</span>
                 </Button>
             </div>
 
