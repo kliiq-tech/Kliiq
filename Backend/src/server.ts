@@ -38,15 +38,21 @@ app.get('/api/health', (req, res) => {
 // Device Routes
 app.get('/api/devices', async (req: AuthRequest, res: Response) => {
     try {
+        console.log('User from JWT:', req.user);
+        console.log('User ID:', req.user?.id);
+
         const { data, error } = await supabase
             .from('devices')
             .select('*')
             .eq('user_id', req.user.id) // App-level isolation
             .order('created_at', { ascending: false });
 
+        console.log('Query result:', { data, error, user_id: req.user.id });
+
         if (error) throw error;
         res.json(data);
     } catch (error: any) {
+        console.error('Error fetching devices:', error);
         res.status(500).json({ error: error.message });
     }
 });
