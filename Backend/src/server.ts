@@ -38,19 +38,31 @@ app.get('/api/health', (req, res) => {
 // Device Routes
 app.get('/api/devices', async (req: AuthRequest, res: Response) => {
     try {
-        console.log('User from JWT:', req.user);
-        console.log('User ID:', req.user?.id);
+        const userId = req.user?.id;
+        console.log('=== DEVICES ENDPOINT DEBUG ===');
+        console.log('Full user object:', JSON.stringify(req.user, null, 2));
+        console.log('User ID from JWT:', userId);
 
+        // First, let's see ALL devices in the database
+        const { data: allDevices } = await supabase
+            .from('devices')
+            .select('*');
+        console.log('Total devices in DB:', allDevices?.length);
+        console.log('All device user_ids:', allDevices?.map(d => d.user_id));
+
+        // Now query with the user_id filter
         const { data, error } = await supabase
             .from('devices')
             .select('*')
-            .eq('user_id', req.user.id) // App-level isolation
+            .eq('user_id', userId)
             .order('created_at', { ascending: false });
 
-        console.log('Query result:', { data, error, user_id: req.user.id });
+        console.log('Filtered devices count:', data?.length);
+        console.log('Query error:', error);
+        console.log('=== END DEBUG ===');
 
         if (error) throw error;
-        res.json(data);
+        res.json(data || []);
     } catch (error: any) {
         console.error('Error fetching devices:', error);
         res.status(500).json({ error: error.message });
