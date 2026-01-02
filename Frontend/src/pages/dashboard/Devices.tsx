@@ -1,7 +1,7 @@
 import { Laptop, Search, Filter, MoreVertical, RefreshCw, Smartphone, Monitor, Shield, Trash2, Key } from 'lucide-react'
 import { Button } from '../../components/ui/Button'
 import { cn } from '../../lib/utils'
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { supabase } from '../../lib/supabase'
 
 export function DashboardDevices() {
@@ -18,32 +18,138 @@ export function DashboardDevices() {
 
     const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001/api'
 
-    useEffect(() => {
-        fetchDevices()
-    }, [])
+    const initializationRef = useRef(false);
 
-    const fetchDevices = async () => {
+    useEffect(() => {
+        if (!initializationRef.current) {
+            initializationRef.current = true;
+            initializeDevice();
+        }
+    }, []);
+
+    const initializeDevice = async () => {
+        // Dynamic Detection
+        let deviceId = localStorage.getItem('kliiq_device_id');
+        let deviceName = localStorage.getItem('kliiq_device_name');
+        let deviceType = localStorage.getItem('kliiq_device_type');
+        let deviceOS = localStorage.getItem('kliiq_device_os');
+
+        if (!deviceId) {
+            deviceId = 'DEV-' + Math.random().toString(36).substr(2, 6).toUpperCase();
+
+            const ua = navigator.userAgent;
+            const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(ua);
+            deviceType = isMobile ? 'mobile' : 'laptop';
+
+            // Simple OS Detection
+            if (ua.indexOf("Win") !== -1) deviceOS = "Windows 11";
+            else if (ua.indexOf("Mac") !== -1) deviceOS = "macOS";
+            else if (ua.indexOf("Linux") !== -1) deviceOS = "Linux";
+            else if (ua.indexOf("Android") !== -1) deviceOS = "Android";
+            else if (ua.indexOf("like Mac") !== -1) deviceOS = "iOS";
+            else deviceOS = "Unknown OS";
+
+            const browser = ua.indexOf("Chrome") !== -1 ? "Chrome" : ua.indexOf("Firefox") !== -1 ? "Firefox" : "Browser";
+            deviceName = `${browser} on ${deviceOS} (${deviceId.substring(4)})`;
+
+            localStorage.setItem('kliiq_device_id', deviceId);
+            localStorage.setItem('kliiq_device_name', deviceName);
+            localStorage.setItem('kliiq_device_type', deviceType);
+            localStorage.setItem('kliiq_device_os', deviceOS);
+        }
+
+        const currentSpecs = {
+            id: deviceId, // Note: ID in DB might be different if DB ignores this, but we use Name for dedupe currently
+            name: deviceName,
+            type: deviceType,
+            os: deviceOS,
+            specs: 'Web Agent | ' + navigator.hardwareConcurrency + ' Cores'
+        };
+
+        await fetchDevices(currentSpecs);
+    };
+
+    const fetchDevices = async (currentSpecs?: any) => {
         try {
-            setLoading(true)
-            const { data: { session } } = await supabase.auth.getSession()
-            if (!session) throw new Error('Not authenticated')
+            setLoading(true);
+            const { data: { session } } = await supabase.auth.getSession();
+            if (!session) throw new Error('Not authenticated');
 
             const response = await fetch(`${API_URL}/devices`, {
                 headers: {
                     'Authorization': `Bearer ${session.access_token}`
                 }
-            })
-            if (!response.ok) throw new Error('Failed to fetch devices')
-            const data = await response.json()
-            setDevices(data)
-            setError(null)
+            });
+            if (!response.ok) throw new Error('Failed to fetch devices');
+            const data = await response.json();
+
+            // Real-time Agent Logic
+            if (currentSpecs) {
+                // Check if THIS specific browser instance is registered
+                // We trust local storage name as the "Identity"
+                const currentDeviceExists = data.find((d: any) => d.name === currentSpecs.name);
+
+                if (!currentDeviceExists) {
+                    // Check if this is the FIRST device ever
+                    const isFirstDevice = data.length === 0;
+
+                    await fetch(`${API_URL}/devices`, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'Authorization': `Bearer ${session.access_token}`
+                        },
+                        body: JSON.stringify({
+                            name: currentSpecs.name,
+                            type: currentSpecs.type,
+                            os: currentSpecs.os,
+                            specs: currentSpecs.specs,
+                            is_host: isFirstDevice
+                        })
+                    });
+                    // Re-fetch
+                    const refreshHelper = await fetch(`${API_URL}/devices`, {
+                        headers: { 'Authorization': `Bearer ${session.access_token}` }
+                    });
+                    const refreshData = await refreshHelper.json();
+                    setDevices(refreshData);
+                } else {
+                    // CHECK FOR NO HOST: If no device is host, auto-promote the current one
+                    const hostExists = data.some((d: any) => d.is_host);
+                    if (!hostExists) {
+                        const myDevice = data.find((d: any) => d.name === currentSpecs.name);
+                        if (myDevice) {
+                            await fetch(`${API_URL}/devices/${myDevice.id}`, {
+                                method: 'PATCH',
+                                headers: {
+                                    'Content-Type': 'application/json',
+                                    'Authorization': `Bearer ${session.access_token}`
+                                },
+                                body: JSON.stringify({ is_host: true })
+                            });
+                            // Refresh logic to show the update immediately
+                            const refreshResponse = await fetch(`${API_URL}/devices`, {
+                                headers: { 'Authorization': `Bearer ${session.access_token}` }
+                            });
+                            const refreshData = await refreshResponse.json();
+                            setDevices(refreshData);
+                            return;
+                        }
+                    }
+                    setDevices(data);
+                }
+            } else {
+                setDevices(data);
+            }
+
+            setError(null);
         } catch (err: any) {
-            setError(err.message)
-            console.error(err)
+            setError(err.message);
+            console.error(err);
         } finally {
-            setLoading(false)
+            setLoading(false);
         }
-    }
+    };
 
     // Helper to find device by ID
     const getDevice = (id: string | null) => devices.find(d => d.id === id)
@@ -71,30 +177,77 @@ export function DashboardDevices() {
     }
 
     const confirmAction = async () => {
-        // Mock Password Check
-        if (password !== 'admin') {
-            alert("Incorrect Password (Try 'admin')")
-            return
-        }
-
         try {
-            if (actionState.type === 'change_host' && selectedHostId) {
-                // Promotion logic: Update the new host in the database
-                const response = await fetch(`${API_URL}/devices/${selectedHostId}`, {
-                    method: 'PATCH',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ is_host: true })
-                })
-                if (!response.ok) throw new Error('Failed to change host')
-            } else if (actionState.type === 'remove' && actionState.targetId) {
-                const response = await fetch(`${API_URL}/devices/${actionState.targetId}`, {
-                    method: 'DELETE'
-                })
-                if (!response.ok) throw new Error('Failed to remove device')
+            const { data: { session } } = await supabase.auth.getSession();
+            if (!session) throw new Error('Not authenticated');
+
+            // Verify Password with Backend
+            const verifyResponse = await fetch(`${API_URL}/settings/verify-password`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${session.access_token}`
+                },
+                body: JSON.stringify({ password })
+            });
+
+            if (!verifyResponse.ok) {
+                const contentType = verifyResponse.headers.get("content-type");
+                let errorMessage = 'Password verification failed';
+                if (contentType && contentType.includes("application/json")) {
+                    const errData = await verifyResponse.json();
+                    errorMessage = errData.error || errorMessage;
+                } else {
+                    errorMessage = `Server Error: ${verifyResponse.status} (Is backend running and updated?)`;
+                }
+                throw new Error(errorMessage);
             }
 
-            // Re-fetch to get fresh state from DB
-            await fetchDevices()
+            // Optimistic Update
+            let newDevices = [...devices];
+
+            if (actionState.type === 'change_host' && selectedHostId) {
+                // Optimistically update
+                newDevices = newDevices.map(d => ({
+                    ...d,
+                    is_host: d.id === selectedHostId
+                }));
+                // Force update UI immediately
+                setDevices(newDevices);
+
+                const response = await fetch(`${API_URL}/devices/${selectedHostId}`, {
+                    method: 'PATCH',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${session.access_token}`
+                    },
+                    body: JSON.stringify({ is_host: true })
+                })
+                if (!response.ok) {
+                    // Revert if failed
+                    await fetchDevices();
+                    throw new Error('Failed to change host')
+                }
+            } else if (actionState.type === 'remove' && actionState.targetId) {
+                // Optimistically update
+                newDevices = newDevices.filter(d => d.id !== actionState.targetId);
+                setDevices(newDevices);
+
+                const response = await fetch(`${API_URL}/devices/${actionState.targetId}`, {
+                    method: 'DELETE',
+                    headers: {
+                        'Authorization': `Bearer ${session.access_token}`
+                    }
+                })
+                if (!response.ok) {
+                    // Revert if failed
+                    await fetchDevices();
+                    throw new Error('Failed to remove device')
+                }
+            }
+
+            // No need to refetch immediately if successful, state is already correct
+            // await fetchDevices()
         } catch (err: any) {
             alert(err.message)
         }
@@ -139,8 +292,8 @@ export function DashboardDevices() {
             </div>
 
             {/* Devices List Table Style */}
-            <div className="bg-white dark:bg-surface/20 border border-gray-200 dark:border-white/10 rounded-xl overflow-hidden min-h-[400px] shadow-sm dark:shadow-none">
-                <div className="responsive-table-container">
+            <div className="bg-white dark:bg-surface/20 border border-gray-200 dark:border-white/10 rounded-xl min-h-[400px] shadow-sm dark:shadow-none">
+                <div className="">
                     <div className="min-w-[800px]">
                         <div className="grid grid-cols-12 gap-4 p-4 border-b border-gray-100 dark:border-white/10 text-xs font-semibold text-gray-500 dark:text-text-muted uppercase tracking-wider">
                             <div className="col-span-4">Device Name</div>
@@ -220,7 +373,7 @@ export function DashboardDevices() {
                                                 <MoreVertical className="w-4 h-4 text-gray-400 dark:text-text-muted" />
                                             </Button>
                                             {/* Dropdown Menu */}
-                                            <div className="absolute right-8 top-0 w-48 bg-white dark:bg-surface border border-gray-200 dark:border-white/10 rounded-lg shadow-xl py-1 hidden group-hover/menu:block hover:block z-10 peer-focus:block">
+                                            <div className="absolute right-0 top-8 w-48 bg-white dark:bg-surface border border-gray-200 dark:border-white/10 rounded-lg shadow-xl py-1 hidden group-hover/menu:block hover:block z-50 peer-focus:block">
                                                 <button
                                                     onClick={() => handleAction('change_host', device.id)}
                                                     className="w-full text-left px-4 py-2 text-sm text-gray-700 dark:text-text-secondary hover:text-gray-900 dark:hover:text-white hover:bg-gray-50 dark:hover:bg-white/5 flex items-center gap-2"

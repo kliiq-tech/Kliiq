@@ -19,7 +19,8 @@ import { DashboardHardware } from './pages/dashboard/Hardware'
 import { DashboardSoftware } from './pages/dashboard/Software'
 import { DashboardActivity } from './pages/dashboard/Activity'
 import { DashboardSettings } from './pages/dashboard/Settings'
-import { DashboardApps } from './pages/dashboard/Apps'
+import { DashboardStore } from './pages/dashboard/Store'
+import { DashboardPacks } from './pages/dashboard/Packs'
 import { UpgradePage } from './pages/dashboard/Upgrade'
 import { ConfigurePlan } from './pages/dashboard/ConfigurePlan'
 
@@ -49,7 +50,8 @@ function App() {
         {/* Dashboard Routes */}
         <Route path="/dashboard" element={<DashboardLayout />}>
           <Route index element={<DashboardOverview />} />
-          <Route path="apps" element={<DashboardApps />} />
+          <Route path="store" element={<DashboardStore />} />
+          <Route path="packs" element={<DashboardPacks />} />
           <Route path="upgrade" element={<UpgradePage />} />
           <Route path="configure-plan" element={<ConfigurePlan />} />
           <Route path="devices" element={<DashboardDevices />} />

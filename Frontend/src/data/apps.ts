@@ -8,6 +8,7 @@ export interface AppData {
     size?: string;
     category: string;
     manualUrl?: string; // For things like APKs
+    platform?: 'windows' | 'mobile' | 'both';
 }
 
 export const APP_CATEGORIES = [
@@ -100,7 +101,7 @@ export const ALL_APPS: AppData[] = [
     { id: "qBittorrent.qBittorrent", name: "qBittorrent", domain: "qbittorrent.org", category: "File Sharing", version: "v4.6", size: "28 MB" },
 
     // Other
-    { id: "Valve.Steam", name: "Steam", domain: "steampowered.com", category: "Other", version: "Latest", size: "1.5 MB" },
-    { id: "EpicGames.EpicGamesLauncher", name: "Epic Games", domain: "epicgames.com", category: "Other", version: "Latest", size: "45 MB" },
-    { id: "Evernote.Evernote", name: "Evernote", domain: "evernote.com", category: "Other", version: "v10.65", size: "156 MB" }
+    { id: "Valve.Steam", name: "Steam", domain: "steampowered.com", category: "Other", version: "Latest", size: "1.5 MB", platform: "windows" },
+    { id: "EpicGames.EpicGamesLauncher", name: "Epic Games", domain: "epicgames.com", category: "Other", version: "Latest", size: "45 MB", platform: "windows" },
+    { id: "Evernote.Evernote", name: "Evernote", domain: "evernote.com", category: "Other", version: "v10.65", size: "156 MB", platform: "windows" }
 ];

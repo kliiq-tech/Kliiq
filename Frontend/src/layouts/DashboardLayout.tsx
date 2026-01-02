@@ -1,5 +1,5 @@
 import { Link, Outlet, useLocation, useNavigate } from 'react-router-dom'
-import { LayoutDashboard, Monitor, ShieldCheck, Activity, Settings, LogOut, Cpu, Grid, Menu, X as CloseIcon } from 'lucide-react'
+import { LayoutDashboard, Monitor, ShieldCheck, Activity, Settings, LogOut, Cpu, Store, Menu, X as CloseIcon, Package } from 'lucide-react'
 import { cn } from '../lib/utils'
 import { motion, AnimatePresence } from 'framer-motion'
 import { Button } from '../components/ui/Button'
@@ -10,7 +10,8 @@ import type { User } from '@supabase/supabase-js'
 
 const sidebarItems = [
     { icon: LayoutDashboard, label: 'Overview', path: '/dashboard' },
-    { icon: Grid, label: 'Apps', path: '/dashboard/apps' },
+    { icon: Store, label: 'Store', path: '/dashboard/store' },
+    { icon: Package, label: 'Packs', path: '/dashboard/packs' },
     { icon: Monitor, label: 'Devices', path: '/dashboard/devices' },
     { icon: Cpu, label: 'Hardware', path: '/dashboard/hardware' },
     { icon: ShieldCheck, label: 'Software', path: '/dashboard/software' },

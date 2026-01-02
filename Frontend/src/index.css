@@ -64,6 +64,15 @@
   .glass-card-hover {
     @apply hover:bg-surface/60 hover:border-white/10 transition-all duration-300;
   }
+
+  .scrollbar-hide {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+
+  .scrollbar-hide::-webkit-scrollbar {
+    display: none;
+  }
 }
 
 /* Custom technical scrollbar */
