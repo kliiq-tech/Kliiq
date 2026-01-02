@@ -170,7 +170,7 @@ export function DashboardOverview() {
                     </h3>
 
                     <div className="flex-1 overflow-y-auto space-y-4 pr-2 custom-scrollbar">
-                        {devices.map((d, i) => (
+                        {devices.map((d) => (
                             <div key={d.id} className="flex gap-3 text-sm border-l-2 border-gray-100 dark:border-white/5 pl-4 pb-4 relative last:pb-0">
                                 <div className="absolute -left-[5px] top-0 w-2 h-2 rounded-full bg-green-500"></div>
                                 <div>
