@@ -19,7 +19,7 @@ export function DashboardActivity() {
             const { data: { session } } = await supabase.auth.getSession()
             if (session) {
                 const user = session.user
-                const isIncomplete = !user.user_metadata?.gender || !user.user_metadata?.dob
+                const isIncomplete = !user.user_metadata?.gender || !user.user_metadata?.dob || !user.user_metadata?.username
                 setIsProfileIncomplete(isIncomplete)
 
                 // Load existing activities from localStorage

@@ -108,7 +108,7 @@ export function DashboardLayout() {
                         {sidebarItems.map((item) => {
                             const isActive = location.pathname === item.path
                             const Icon = item.icon
-                            const isProfileIncomplete = !user?.user_metadata?.gender || !user?.user_metadata?.dob
+                            const isProfileIncomplete = !user?.user_metadata?.gender || !user?.user_metadata?.dob || !user?.user_metadata?.username
                             const hasNotification = isProfileIncomplete && (item.label === 'Activity' || item.label === 'Settings')
 
                             return (

@@ -144,7 +144,7 @@ export function DashboardSettings() {
         'https://api.dicebear.com/7.x/avataaars/svg?seed=Charlie',
     ]
 
-    const isProfileIncomplete = !user?.user_metadata?.gender || !user?.user_metadata?.dob
+    const isProfileIncomplete = !user?.user_metadata?.gender || !user?.user_metadata?.dob || !user?.user_metadata?.username
 
     return (
         <div className="max-w-2xl space-y-8">
