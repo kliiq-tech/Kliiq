@@ -247,8 +247,8 @@ export function DashboardPacks() {
                         <Trash2 className="w-4 h-4" />
                         <span className="hidden sm:inline">Delete All Packs</span>
                     </Button>
-                    <Button onClick={() => setShowCreateModal(true)} className="gap-2 px-3 sm:px-4 h-9 sm:h-11">
-                        <Plus className="w-4 h-4" />
+                    <Button onClick={() => setShowCreateModal(true)} className="gap-2 px-3 sm:px-4 h-9 sm:h-11 whitespace-nowrap">
+                        <Plus className="w-4 h-4 shrink-0" />
                         <span className="hidden sm:inline">Create New Pack</span>
                         <span className="sm:hidden">New Pack</span>
                     </Button>

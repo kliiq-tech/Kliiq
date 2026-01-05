@@ -68,13 +68,13 @@ export function DashboardHardware() {
         const interval = setInterval(() => {
             setFluctuatingStats(prev => ({
                 usage: {
-                    cpu: Math.max(5, Math.min(100, prev.usage.cpu + (Math.random() * 10 - 5))),
-                    memory: Math.max(20, Math.min(90, prev.usage.memory + (Math.random() * 4 - 2))),
-                    storage: 68, // Storage usually stable
-                    gpu: Math.max(0, Math.min(100, prev.usage.gpu + (Math.random() * 15 - 7)))
+                    cpu: Math.max(5, Math.min(100, prev.usage.cpu + (Math.random() * 6 - 3))),
+                    memory: Math.max(20, Math.min(95, prev.usage.memory + (Math.random() * 2 - 1))),
+                    storage: 68,
+                    gpu: Math.max(0, Math.min(100, prev.usage.gpu + (Math.random() * 10 - 5)))
                 }
             }));
-        }, 2000); // Update every 2 seconds
+        }, 1000); // 1s sync for Task Manager feel
 
         return () => clearInterval(interval);
     }, []);
@@ -154,7 +154,7 @@ export function DashboardHardware() {
                         {/* Visual Gauge Bar */}
                         <div className="relative h-2 bg-gray-100 dark:bg-white/10 rounded-full overflow-hidden">
                             <div
-                                className={`absolute top-0 left-0 h-full rounded-full transition-all duration-1000 ${item.name === 'Graphics' ? 'bg-yellow-400' :
+                                className={`absolute top-0 left-0 h-full rounded-full transition-all duration-1000 ease-linear ${item.name === 'Graphics' ? 'bg-yellow-400' :
                                     item.name === 'Storage' ? 'bg-green-400' :
                                         item.name === 'Memory' ? 'bg-purple-400' : 'bg-blue-400'
                                     }`}

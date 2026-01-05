@@ -27,6 +27,7 @@ export function DashboardStore() {
     const [packs, setPacks] = useState<Pack[]>([]);
     const [showAddToPack, setShowAddToPack] = useState<string | null>(null);
     const [searchQuery, setSearchQuery] = useState('');
+    const [loading, setLoading] = useState(true);
 
     // Fizz Fazz game data (for Games/Phone)
     const fizzFazzGame = {
@@ -47,6 +48,7 @@ export function DashboardStore() {
 
     const fetchPacks = async () => {
         try {
+            setLoading(true);
             const { data: { session } } = await supabase.auth.getSession();
             if (!session) return;
 
@@ -61,6 +63,8 @@ export function DashboardStore() {
             }
         } catch (err) {
             console.error('Error fetching packs:', err);
+        } finally {
+            setLoading(false);
         }
     };
 
@@ -262,14 +266,36 @@ export function DashboardStore() {
             const devTools = filteredApps.filter(a => a.category === 'Developer Tools' || a.category === 'Terminals');
             const creativeTools = filteredApps.filter(a => a.category === 'Multimedia' || a.category === 'Communication');
 
+            // If searching, only show sections that have matches.
+            // If not searching, show all sections as normal.
+            const isSearching = searchQuery.length > 0;
+
             return (
                 <div className="space-y-10 pb-20">
-                    <HeroCarousel slides={heroSlides} />
+                    {!isSearching && <HeroCarousel slides={heroSlides} />}
 
-                    <StoreSection title="Essential Apps" apps={essentialApps.length ? essentialApps : filteredApps.slice(0, 6)} />
-                    <StoreSection title="Developer Tools" apps={devTools.length ? devTools : filteredApps.slice(6, 12)} />
-                    <StoreSection title="Creative & Social" apps={creativeTools.length ? creativeTools : filteredApps.slice(12, 18)} />
-                    <StoreSection title="Top Free Apps" apps={filteredApps} />
+                    {(essentialApps.length > 0 || !isSearching) && (
+                        <StoreSection
+                            title="Essential Apps"
+                            apps={essentialApps.length ? essentialApps : (isSearching ? [] : filteredApps.slice(0, 6))}
+                        />
+                    )}
+
+                    {(devTools.length > 0 || !isSearching) && (
+                        <StoreSection
+                            title="Developer Tools"
+                            apps={devTools.length ? devTools : (isSearching ? [] : filteredApps.slice(6, 12))}
+                        />
+                    )}
+
+                    {(creativeTools.length > 0 || !isSearching) && (
+                        <StoreSection
+                            title="Creative & Social"
+                            apps={creativeTools.length ? creativeTools : (isSearching ? [] : filteredApps.slice(12, 18))}
+                        />
+                    )}
+
+                    <StoreSection title={isSearching ? "Search Results" : "Top Free Apps"} apps={filteredApps} />
                 </div>
             );
         }
@@ -300,6 +326,30 @@ export function DashboardStore() {
             </div>
         );
     };
+
+    if (loading) {
+        return (
+            <div className="space-y-10 pb-20 animate-in fade-in duration-500 p-4 sm:p-6 lg:p-8">
+                {/* Hero Skeleton */}
+                <div className="w-full aspect-[21/9] bg-gray-50 dark:bg-white/5 rounded-[2rem] animate-pulse border border-gray-100 dark:border-white/5" />
+
+                {/* Sections Skeletons */}
+                {[1, 2, 3].map(i => (
+                    <div key={i} className="space-y-6">
+                        <div className="flex items-center justify-between">
+                            <div className="h-8 w-48 bg-gray-50 dark:bg-white/5 rounded-xl animate-pulse border border-gray-100 dark:border-white/5" />
+                            <div className="h-4 w-16 bg-gray-50 dark:bg-white/5 rounded-lg animate-pulse" />
+                        </div>
+                        <div className="flex gap-4 overflow-hidden">
+                            {[1, 2, 3, 4, 5, 6].map(j => (
+                                <div key={j} className="min-w-[160px] w-[160px] aspect-[4/5] bg-gray-50 dark:bg-white/5 rounded-2xl animate-pulse border border-gray-100 dark:border-white/5" />
+                            ))}
+                        </div>
+                    </div>
+                ))}
+            </div>
+        )
+    }
 
     return (
         <div className="min-h-screen bg-white dark:bg-background">

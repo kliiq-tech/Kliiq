@@ -10,6 +10,9 @@ export function SignUp() {
     const [email, setEmail] = useState("")
     const [password, setPassword] = useState("")
     const [name, setName] = useState("")
+    const [nickname, setNickname] = useState("")
+    const [gender, setGender] = useState("")
+    const [dob, setDob] = useState("")
     const [isLoading, setIsLoading] = useState(false)
     const [error, setError] = useState("")
 
@@ -25,6 +28,10 @@ export function SignUp() {
                 options: {
                     data: {
                         full_name: name,
+                        nickname: nickname,
+                        gender: gender,
+                        dob: dob,
+                        username: nickname.toLowerCase().replace(/[^a-z0-9]/g, '') || name.toLowerCase().split(' ')[0]
                     }
                 }
             })
@@ -87,15 +94,51 @@ export function SignUp() {
                             </div>
                         )}
 
-                        {/* Email/Password Form */}
-                        <div className="space-y-2">
-                            <label className="text-sm font-medium text-text-secondary">Name</label>
-                            <Input
-                                placeholder="John Doe"
-                                value={name}
-                                onChange={(e) => setName(e.target.value)}
-                                required
-                            />
+                        <div className="grid grid-cols-2 gap-4">
+                            <div className="space-y-2">
+                                <label className="text-sm font-medium text-text-secondary">Name</label>
+                                <Input
+                                    placeholder="John Doe"
+                                    value={name}
+                                    onChange={(e) => setName(e.target.value)}
+                                    required
+                                />
+                            </div>
+                            <div className="space-y-2">
+                                <label className="text-sm font-medium text-text-secondary">Nickname</label>
+                                <Input
+                                    placeholder="Johnny"
+                                    value={nickname}
+                                    onChange={(e) => setNickname(e.target.value)}
+                                    required
+                                />
+                            </div>
+                        </div>
+                        <div className="grid grid-cols-2 gap-4">
+                            <div className="space-y-2">
+                                <label className="text-sm font-medium text-text-secondary">Gender</label>
+                                <select
+                                    value={gender}
+                                    onChange={(e) => setGender(e.target.value)}
+                                    className="w-full h-11 bg-surface border border-white/10 rounded-lg px-3 text-white focus:outline-none focus:ring-2 focus:ring-primary/50"
+                                    required
+                                >
+                                    <option value="" disabled className="bg-surface">Select</option>
+                                    <option value="male" className="bg-surface text-white">Male</option>
+                                    <option value="female" className="bg-surface text-white">Female</option>
+                                    <option value="other" className="bg-surface text-white">Other</option>
+                                </select>
+                            </div>
+                            <div className="space-y-2">
+                                <label className="text-sm font-medium text-text-secondary">Date of Birth</label>
+                                <Input
+                                    type="date"
+                                    value={dob}
+                                    onChange={(e) => setDob(e.target.value)}
+                                    required
+                                    className="block"
+                                />
+                            </div>
                         </div>
                         <div className="space-y-2">
                             <label className="text-sm font-medium text-text-secondary">Email</label>

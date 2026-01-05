@@ -108,6 +108,8 @@ export function DashboardLayout() {
                         {sidebarItems.map((item) => {
                             const isActive = location.pathname === item.path
                             const Icon = item.icon
+                            const isProfileIncomplete = !user?.user_metadata?.gender || !user?.user_metadata?.dob
+                            const hasNotification = isProfileIncomplete && (item.label === 'Activity' || item.label === 'Settings')
 
                             return (
                                 <Link key={item.path} to={item.path}>
@@ -118,7 +120,11 @@ export function DashboardLayout() {
                                             : "text-gray-500 dark:text-text-muted hover:text-gray-900 dark:hover:text-white hover:bg-gray-50 dark:hover:bg-white/5"
                                     )}>
                                         <Icon className={cn("w-4 h-4", isActive ? "text-primary" : "text-gray-400 dark:text-text-muted group-hover:text-gray-900 dark:group-hover:text-white")} />
-                                        {item.label}
+                                        <span className="flex-1">{item.label}</span>
+
+                                        {hasNotification && (
+                                            <div className="w-2 h-2 rounded-full bg-red-500 shadow-[0_0_10px_rgba(239,68,68,0.5)] animate-pulse" />
+                                        )}
 
                                         {isActive && (
                                             <motion.div
@@ -137,12 +143,22 @@ export function DashboardLayout() {
                         <div className="bg-gray-50 dark:bg-white/5 rounded-2xl p-4 border border-gray-100 dark:border-white/5">
                             <div className="flex items-center justify-between mb-4">
                                 <div className="flex items-center gap-3">
-                                    <div className="w-10 h-10 rounded-full bg-primary/20 flex items-center justify-center text-primary font-bold uppercase">
-                                        {user?.email?.substring(0, 2) || '??'}
+                                    <div className="w-10 h-10 rounded-full bg-primary/20 flex items-center justify-center text-primary font-bold uppercase overflow-hidden">
+                                        {user?.user_metadata?.avatar_url ? (
+                                            <img src={user.user_metadata.avatar_url} alt="" className="w-full h-full object-cover" />
+                                        ) : (
+                                            <span>
+                                                {(user?.user_metadata?.full_name || 'Miracle Iwunze')
+                                                    .split(' ')
+                                                    .map((n: string) => n[0])
+                                                    .join('')
+                                                    .substring(0, 2)}
+                                            </span>
+                                        )}
                                     </div>
                                     <div className="flex flex-col">
                                         <span className="text-sm font-bold text-gray-900 dark:text-white truncate max-w-[100px]">
-                                            {user?.user_metadata?.full_name || user?.email?.split('@')[0] || 'User'}
+                                            {user?.user_metadata?.full_name || 'Miracle Iwunze'}
                                         </span>
                                         <div className="flex items-center gap-1.5">
                                             <div className="w-2 h-2 rounded-full bg-green-500 animate-pulse" />
